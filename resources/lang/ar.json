@@ -64,5 +64,7 @@
     "Health": "الحالة الصحية",
     "Relatives": "الأقارب",
     "Contact": "بيانات التواصل",
-    "Status": "الحالة"
+    "Status": "الحالة",
+
+    "subscriber_image": "صورة المشترك"
 }

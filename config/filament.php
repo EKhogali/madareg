@@ -99,8 +99,8 @@ return [
     'system_route_prefix' => 'filament',
 
     'branding' => [
-    'logo' => asset('images/madarej-alnoor.png'), // adjust if path is different
-    'favicon' => asset('images/favicon.ico'),     // optional: set favicon
+    'logo' => 'images/madarej-alnoor.png', // adjust if path is different
+    'favicon' => 'images/favicon.ico',     // optional: set favicon
     'theme' => [
         'colors' => [
             'primary' => '#F4A623',

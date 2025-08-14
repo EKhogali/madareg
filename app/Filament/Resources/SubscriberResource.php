@@ -22,6 +22,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Columns\ImageColumn;
 
 
 
@@ -40,6 +42,24 @@ class SubscriberResource extends Resource
     {
         return $form
             ->schema([
+
+                Section::make(__('Personal Information'))
+                    ->schema([
+                        Grid::make(2)->schema([
+                            FileUpload::make('image_path')
+                                ->label(__('subscriber_image'))
+                                ->directory('subscribers')
+                                ->disk('public')
+                                ->image()
+                                ->imageEditor()
+                                ->visibility('public')
+                                ->preserveFilenames()
+                                ->maxSize(2048),
+                        ]),
+                    ])
+                    ->extraAttributes([
+                        'style' => 'background-color: #EBF8FF; padding: 1rem; border-radius: 8px;'
+                    ]),
 
                 Section::make(__('Personal Information'))
                     ->schema([
@@ -204,6 +224,14 @@ class SubscriberResource extends Resource
     {
         return $table
             ->columns([
+
+                ImageColumn::make('image_path')
+                    ->label(__('subscriber_image'))
+                    ->circular()
+                    ->disk('public')
+                    ->size(40)
+                    ->defaultImageUrl(asset('images/default-user.png')),
+
                 // Always visible
                 TextColumn::make('name')
                     ->label(__('name'))

@@ -60,6 +60,8 @@ return new class extends Migration
             $table->boolean('active')->default(1);            
             $table->boolean('locked')->default(0);
 
+            $table->string('image_path')->nullable();
+
             $table->timestamps();
         });
     }

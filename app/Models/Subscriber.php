@@ -34,6 +34,7 @@ class Subscriber extends Model
         'has_relatives_at_madareg',
         'relatives_at_madareg',
         'father_phone',
-        'mother_phone'
+        'mother_phone',
+        'image_path',
     ];
 }
