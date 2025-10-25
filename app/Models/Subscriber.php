@@ -37,4 +37,10 @@ class Subscriber extends Model
         'mother_phone',
         'image_path',
     ];
+
+    public function user()
+{
+    return $this->belongsTo(User::class);
+}
+
 }

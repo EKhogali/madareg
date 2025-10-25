@@ -66,5 +66,15 @@
     "Contact": "بيانات التواصل",
     "Status": "الحالة",
 
-    "subscriber_image": "صورة المشترك"
+    "subscriber_image": "صورة المشترك",
+
+    "Group Info": "بيانات المجموعة",
+    "Name": "الاسم",
+    "Description": "الوصف",
+    "Start Date": "تاريخ البداية",
+    "End Date": "تاريخ النهاية",
+    "Active": "نشط",
+    "Color": "اللون",
+    "Yes": "نعم",
+    "No": "لا"
 }
