@@ -36,11 +36,21 @@ class Subscriber extends Model
         'father_phone',
         'mother_phone',
         'image_path',
+        'stage_id',
+        'track_degree_id',
     ];
 
     public function user()
 {
     return $this->belongsTo(User::class);
 }
+public function trackDegree()
+{
+    return $this->belongsTo(Track_degree::class);
+}
+public function stage()
+{
+    return $this->belongsTo(Stage::class);
 
+}
 }

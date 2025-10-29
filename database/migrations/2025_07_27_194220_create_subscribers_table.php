@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('residence_place')->nullable();
             $table->string('nationality')->nullable();
 
+            $table->foreignId('track_degree_id')->nullable()->constrained('track_degrees')->nullOnDelete();
+            $table->foreignId('stage_id')->nullable()->constrained('stages')->nullOnDelete();
+
             // Education
             $table->string('study_level')->nullable(); // e.g., "الصف الرابع"
             $table->integer('education_type')->nullable(); // 0: public, 1: private, 2: international

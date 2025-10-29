@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             GroupSeeder::class,
             GroupUserSeeder::class,
+            TrackDegreeSeeder::class,
+            StageSeeder::class,
             SubscriberSeeder::class,
         ]);
     }

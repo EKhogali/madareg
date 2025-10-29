@@ -43,6 +43,27 @@ class SubscriberResource extends Resource
         return $form
             ->schema([
 
+                Section::make(__('Stage Information'))
+                    ->schema([
+                        Grid::make(2)->schema([
+                            // Select::make('track_degree_id')
+                            //     ->label('درجة المضمار')
+                            //     ->relationship('trackDegree', 'title')
+                            //     ->searchable()
+                            //     ->preload()
+                            //     ->required(),
+                            Select::make('stage_id')
+                                ->label('درجة المرحلة')
+                                ->relationship('stage', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+                        ]),
+                    ])
+                    ->extraAttributes([
+                        'style' => 'background-color: #EBF8FF; padding: 1rem; border-radius: 8px;'
+                    ]),
+
                 Section::make(__('Personal Information'))
                     ->schema([
                         Grid::make(2)->schema([
@@ -231,6 +252,15 @@ class SubscriberResource extends Resource
                     ->disk('public')
                     ->size(40)
                     ->defaultImageUrl(asset('images/default-user.png')),
+
+                TextColumn::make('trackDegree.title')
+                    ->label('درجة المضمار')
+                    ->sortable(),
+
+                TextColumn::make('stage.name')
+                    ->label('درجة المرحلة')
+                    ->sortable(),
+
 
                 // Always visible
                 TextColumn::make('name')
