@@ -15,11 +15,11 @@ class StageSeeder extends Seeder
     public function run(): void
     {
         $stages = [
-            ['name' => 'بصيص','created_at' => now(), 'updated_at' => now()],
-            ['name' => 'بريق','created_at' => now(), 'updated_at' => now()],
-            ['name' => 'ضياء','created_at' => now(), 'updated_at' => now()],
-            ['name' => 'وميض','created_at' => now(), 'updated_at' => now()],
-            ['name' => 'نور','created_at' => now(), 'updated_at' => now()],
+            ['name' => 'بصيص', 'color' => '#9370DB','created_at' => now(), 'updated_at' => now()],
+            ['name' => 'بريق', 'color' => '#FF69B4','created_at' => now(), 'updated_at' => now()],
+            ['name' => 'ضياء', 'color' => '#ADFF2F','created_at' => now(), 'updated_at' => now()],
+            ['name' => 'وميض', 'color' => '#DB7093','created_at' => now(), 'updated_at' => now()],
+            ['name' => 'نور', 'color' => '#00CED1','created_at' => now(), 'updated_at' => now()],
         ];
 
         foreach ($stages as $stage) {

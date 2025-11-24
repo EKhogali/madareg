@@ -34,97 +34,99 @@ class GroupResource extends Resource
     protected static ?string $modelLabel = 'مجموعة';
     protected static ?string $pluralModelLabel = 'المجموعات';
 
+    protected static ?string $navigationGroup = 'البيانات الأساسية';
+
     public static function form(Form $form): Form
-{
-    return $form
-        ->schema([
-            Section::make(__('Group Info'))
-                ->schema([
-                    TextInput::make('name')
-                        ->required()
-                        ->label(__('Name')),
+    {
+        return $form
+            ->schema([
+                Section::make(__('Group Info'))
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->label(__('Name')),
 
-                    Textarea::make('description')
-                        ->label(__('Description'))
-                        ->rows(3),
+                        Textarea::make('description')
+                            ->label(__('Description'))
+                            ->rows(3),
 
-                    DatePicker::make('date_range_start')
-                        ->required()
-                        ->label(__('Start Date')),
+                        DatePicker::make('date_range_start')
+                            ->required()
+                            ->label(__('Start Date')),
 
-                    DatePicker::make('date_range_end')
-                        ->required()
-                        ->label(__('End Date')),
+                        DatePicker::make('date_range_end')
+                            ->required()
+                            ->label(__('End Date')),
 
-                    Toggle::make('active')
-                        ->label(__('Active'))
-                        ->default(true),
+                        Toggle::make('active')
+                            ->label(__('Active'))
+                            ->default(true),
 
-                    ColorPicker::make('color')
-                        ->label(__('Color'))
-                        ->default('#FFFFFF'),
-                ])
-                ->columns(2),
-        ]);
-}
+                        ColorPicker::make('color')
+                            ->label(__('Color'))
+                            ->default('#FFFFFF'),
+                    ])
+                    ->columns(2),
+            ]);
+    }
 
 
     public static function table(Table $table): Table
-{
-    return $table
-        ->columns([
-            TextColumn::make('name')
-                ->label(__('Name'))
-                ->sortable()
-                ->searchable(),
+    {
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->label(__('Name'))
+                    ->sortable()
+                    ->searchable(),
 
-            TextColumn::make('date_range_start')
-                ->label(__('Start Date'))
-                ->date()
-                ->sortable(),
+                TextColumn::make('date_range_start')
+                    ->label(__('Start Date'))
+                    ->date()
+                    ->sortable(),
 
-            TextColumn::make('date_range_end')
-                ->label(__('End Date'))
-                ->date()
-                ->sortable(),
+                TextColumn::make('date_range_end')
+                    ->label(__('End Date'))
+                    ->date()
+                    ->sortable(),
 
-            BadgeColumn::make('active')
-    ->label(__('Active'))
-    ->colors([
-        'success' => fn ($state): bool => $state,
-        'danger' => fn ($state): bool => !$state,
-    ])
-    ->formatStateUsing(fn ($state) => $state ? __('Yes') : __('No')),
+                BadgeColumn::make('active')
+                    ->label(__('Active'))
+                    ->colors([
+                        'success' => fn($state): bool => $state,
+                        'danger' => fn($state): bool => !$state,
+                    ])
+                    ->formatStateUsing(fn($state) => $state ? __('Yes') : __('No')),
 
-            TextColumn::make('color')
-                ->label(__('Color')),
-        ])
-        ->filters([
-            SelectFilter::make('active')
-                ->label(__('Active'))
-                ->options([
-                    1 => __('Yes'),
-                    0 => __('No'),
-                ]),
-        ])
-        ->actions([
-            Tables\Actions\ViewAction::make(),
-            Tables\Actions\EditAction::make(),
-            Tables\Actions\DeleteAction::make(),
-        ])
-        ->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
-        ]);
-}
+                TextColumn::make('color')
+                    ->label(__('Color')),
+            ])
+            ->filters([
+                SelectFilter::make('active')
+                    ->label(__('Active'))
+                    ->options([
+                        1 => __('Yes'),
+                        0 => __('No'),
+                    ]),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]);
+    }
 
 
-public static function getRelations(): array
-{
-    return [
-        GroupSupervisorsRelationManager::class,
-        GroupMembersRelationManager::class,
-    ];
-}
+    public static function getRelations(): array
+    {
+        return [
+            GroupSupervisorsRelationManager::class,
+            GroupMembersRelationManager::class,
+        ];
+    }
 
 
     public static function getPages(): array
@@ -135,4 +137,18 @@ public static function getRelations(): array
             'edit' => Pages\EditGroup::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->role === 3) {
+            $query->whereHas('users', function ($q) {
+                $q->where('users.id', auth()->id());
+            });
+        }
+
+        return $query;
+    }
+
 }

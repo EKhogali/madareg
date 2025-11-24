@@ -80,6 +80,11 @@ class ActivityDetailResource extends Resource
         ];
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function getPages(): array
     {
         return [
@@ -88,4 +93,6 @@ class ActivityDetailResource extends Resource
             'edit' => Pages\EditActivityDetail::route('/{record}/edit'),
         ];
     }
+
+    
 }

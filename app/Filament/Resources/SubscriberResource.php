@@ -24,6 +24,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\ColorColumn;
+
+
 
 
 
@@ -35,6 +38,7 @@ class SubscriberResource extends Resource
     protected static ?string $navigationLabel = 'المشتركين';
     protected static ?string $modelLabel = 'مشترك';
     protected static ?string $pluralModelLabel = 'المشتركين';
+    protected static ?string $navigationGroup = 'البيانات الأساسية';
 
 
 
@@ -246,6 +250,17 @@ class SubscriberResource extends Resource
         return $table
             ->columns([
 
+                TextColumn::make('stage.name')
+                    ->label('المرحلة')
+                    ->formatStateUsing(fn($state) => $state ?? 'غير محددة')
+                    ->extraAttributes(function ($record) {
+                        $color = $record->stage->color ?? '#999999';
+
+                        return [
+                            'style' => "background-color: {$color}; color: white; border-radius: 5px; padding: 10px; "
+                        ];
+                    }),
+
                 ImageColumn::make('image_path')
                     ->label(__('subscriber_image'))
                     ->circular()
@@ -253,13 +268,17 @@ class SubscriberResource extends Resource
                     ->size(40)
                     ->defaultImageUrl(asset('images/default-user.png')),
 
+                TextColumn::make('track_degree_id')
+                    ->label('مجموع الدرجات')
+                    ->sortable(),
+
                 TextColumn::make('trackDegree.title')
                     ->label('درجة المضمار')
                     ->sortable(),
 
-                TextColumn::make('stage.name')
-                    ->label('درجة المرحلة')
-                    ->sortable(),
+                // TextColumn::make('stage.name')
+                //     ->label('المرحلة')
+                //     ->sortable(),
 
 
                 // Always visible
@@ -434,4 +453,17 @@ class SubscriberResource extends Resource
             'edit' => Pages\EditSubscriber::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->role === 3) {
+            $groupIds = auth()->user()->groups()->pluck('groups.id');
+            $query->whereIn('group_id', $groupIds);
+        }
+
+        return $query;
+    }
+
 }

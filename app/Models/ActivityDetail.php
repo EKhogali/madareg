@@ -9,8 +9,10 @@ class ActivityDetail extends Model
 {
     /** @use HasFactory<\Database\Factories\ActivityDetailFactory> */
     use HasFactory;
-    
+
     protected $fillable = ['activity_id', 'subscriber_id', 'evaluation', 'notes'];
+
+
 
     public function activity()
     {

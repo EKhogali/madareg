@@ -11,10 +11,15 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use App\Models\ActivityDetail;
+
+
+use Illuminate\Database\Eloquent\Model;
 
 class ActivityDetailsRelationManager extends RelationManager
 {
     protected static string $relationship = 'details';
+    protected static ?string $title = "المشتركون في النشاط";
 
     public function form(Form $form): Form
     {
@@ -37,6 +42,14 @@ class ActivityDetailsRelationManager extends RelationManager
         ])
             ->headerActions([
                 Tables\Actions\CreateAction::make(), // add button
+                // Tables\Actions\CreateAction::make()
+                //     ->label('إضافة تقييم جديد')
+                //     ->model(\App\Models\ActivityDetail::class)
+                //     ->using(function (array $data, $record) {
+                //         $data['activity_id'] = $record->id;
+                //         return ActivityDetail::create($data);
+                //     })
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),    // edit button
@@ -44,4 +57,27 @@ class ActivityDetailsRelationManager extends RelationManager
             ])
             ->defaultSort('id', 'desc');
     }
+
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+{
+    return true;
+}
+
+
+    public function canCreate(): bool
+{
+    return true;
+}
+
+public function canEdit(Model $record): bool
+{
+    return true;
+}
+
+public function canDelete(Model $record): bool
+{
+    return true;
+}
+
+
 }

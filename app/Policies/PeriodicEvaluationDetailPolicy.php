@@ -13,7 +13,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -21,7 +21,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function view(User $user, PeriodicEvaluationDetail $periodicEvaluationDetail): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -29,7 +29,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -37,7 +37,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function update(User $user, PeriodicEvaluationDetail $periodicEvaluationDetail): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -45,7 +45,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function delete(User $user, PeriodicEvaluationDetail $periodicEvaluationDetail): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -53,7 +53,7 @@ class PeriodicEvaluationDetailPolicy
      */
     public function restore(User $user, PeriodicEvaluationDetail $periodicEvaluationDetail): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -61,6 +61,6 @@ class PeriodicEvaluationDetailPolicy
      */
     public function forceDelete(User $user, PeriodicEvaluationDetail $periodicEvaluationDetail): bool
     {
-        return true;
+        return false;
     }
 }

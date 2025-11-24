@@ -61,6 +61,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
     }
+    // app/Models/User.php
+
+    public function supervisorActivities()
+    {
+        return $this->hasMany(SupervisorActivityDetail::class, 'supervisor_id');
+    }
+
 
 
 }

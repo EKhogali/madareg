@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityResource\RelationManagers\ActivityDetailsRelationManager;
+use App\Filament\Resources\ActivityResource\RelationManagers\SupervisorActivityDetailsRelationManager;
 
 
 use App\Filament\Resources\ActivityResource\Pages;
@@ -32,6 +33,8 @@ class ActivityResource extends Resource
     protected static ?string $modelLabel = 'نشاط';
     protected static ?string $pluralModelLabel = 'الأنشطة';
 
+    protected static ?string $navigationGroup = 'إدارة الأنشطة';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -41,15 +44,20 @@ class ActivityResource extends Resource
                     ->default(Carbon::now()),
                 DatePicker::make('to_date')->required()->label('تاريخ نهاية المنشط')
                     ->default(Carbon::now()),
-                Select::make('category')
-                    ->label('تصنيف المنشط')
-                    ->options([
-                        'ترفيهي' => 'ترفيهي',
-                        'رياضي' => 'رياضي',
-                        'إبداعي' => 'إبداعي',
-                        'أخرى' => 'أخرى',
-                    ])
+                Select::make('stage_topic_id')
+                    ->label('موضوع النشاط')
+                    ->relationship('stageTopic', 'category')
+                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->category} - {$record->name}")
                     ->required(),
+                // Select::make('category')
+                //     ->label('تصنيف المنشط')
+                //     ->options([
+                //         'ترفيهي' => 'ترفيهي',
+                //         'رياضي' => 'رياضي',
+                //         'إبداعي' => 'إبداعي',
+                //         'أخرى' => 'أخرى',
+                //     ])
+                //     ->required(),
                 Textarea::make('description')->rows(4)->label('وصف المنشط'),
             ]);
     }
@@ -59,7 +67,11 @@ class ActivityResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')->label('عنوان المنشط')->sortable()->searchable(),
-                TextColumn::make('category')->label('تصنيف المنشط'),
+                Tables\Columns\TextColumn::make('stageTopic.name')
+                    ->label('موضوع النشاط'),
+
+                Tables\Columns\TextColumn::make('stageTopic.category')
+                    ->label('الفئة'),
                 TextColumn::make('from_date')->label('تاريخ بداية المنشط'),
                 TextColumn::make('to_date')->label('تاريخ نهاية المنشط'),
                 TextColumn::make('description')->label('وصف المنشط')->limit(50),
@@ -86,6 +98,7 @@ class ActivityResource extends Resource
     {
         return [
             ActivityDetailsRelationManager::class,
+            SupervisorActivityDetailsRelationManager::class,
         ];
     }
 
@@ -98,4 +111,18 @@ class ActivityResource extends Resource
             'view' => Pages\ViewActivity::route('/{record}/view'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->role === 3) {
+            $query->whereHas('supervisorActivityDetails', function ($q) {
+                $q->where('supervisor_id', auth()->id());
+            });
+        }
+
+        return $query;
+    }
+
 }

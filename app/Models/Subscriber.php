@@ -41,16 +41,27 @@ class Subscriber extends Model
     ];
 
     public function user()
-{
-    return $this->belongsTo(User::class);
-}
-public function trackDegree()
-{
-    return $this->belongsTo(Track_degree::class);
-}
-public function stage()
-{
-    return $this->belongsTo(Stage::class);
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function trackDegree()
+    {
+        return $this->belongsTo(Track_degree::class);
+    }
+    public function stage()
+    {
+        return $this->belongsTo(Stage::class);
 
-}
+    }
+
+    public function activityDetails()
+    {
+        return $this->hasMany(ActivityDetail::class);
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
+    }
+
 }

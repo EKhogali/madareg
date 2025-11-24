@@ -10,14 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('activities', function (Blueprint $table) {
+        Schema::create('supervisor_activity_details', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->date('from_date');
-            $table->date('to_date');
-            $table->foreignId('stage_topic_id')->constrained()->cascadeOnDelete();
-            // $table->string('category');
-            $table->text('description')->nullable();
+            $table->foreignId('activity_id')->constrained('activities')->cascadeOnDelete();
+            $table->foreignId('supervisor_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedTinyInteger('activity_role')->default(2);
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('activities');
+        Schema::dropIfExists('supervisor_activity_details');
     }
 };

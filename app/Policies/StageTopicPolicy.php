@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\PeriodicEvaluation;
+use App\Models\StageTopic;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class PeriodicEvaluationPolicy
+class StageTopicPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,7 +19,7 @@ class PeriodicEvaluationPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, PeriodicEvaluation $periodicEvaluation): bool
+    public function view(User $user, StageTopic $stageTopic): bool
     {
         return false;
     }
@@ -35,7 +35,7 @@ class PeriodicEvaluationPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, PeriodicEvaluation $periodicEvaluation): bool
+    public function update(User $user, StageTopic $stageTopic): bool
     {
         return false;
     }
@@ -43,7 +43,7 @@ class PeriodicEvaluationPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, PeriodicEvaluation $periodicEvaluation): bool
+    public function delete(User $user, StageTopic $stageTopic): bool
     {
         return false;
     }
@@ -51,7 +51,7 @@ class PeriodicEvaluationPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, PeriodicEvaluation $periodicEvaluation): bool
+    public function restore(User $user, StageTopic $stageTopic): bool
     {
         return false;
     }
@@ -59,7 +59,7 @@ class PeriodicEvaluationPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, PeriodicEvaluation $periodicEvaluation): bool
+    public function forceDelete(User $user, StageTopic $stageTopic): bool
     {
         return false;
     }
