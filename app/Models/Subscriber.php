@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscriber extends Model
 {
@@ -38,6 +40,10 @@ class Subscriber extends Model
         'image_path',
         'stage_id',
         'track_degree_id',
+        'user_id',
+        'follow_up_template_id',
+        'active',
+        'locked',
     ];
 
     public function user()
@@ -63,5 +69,17 @@ class Subscriber extends Model
     {
         return $this->belongsTo(Group::class);
     }
+
+
+
+public function followUpTemplate(): BelongsTo
+{
+    return $this->belongsTo(FollowUpTemplate::class, 'follow_up_template_id');
+}
+
+public function followUpPeriods(): HasMany
+{
+    return $this->hasMany(FollowUpPeriod::class);
+}
 
 }

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -68,6 +69,24 @@ class User extends Authenticatable
         return $this->hasMany(SupervisorActivityDetail::class, 'supervisor_id');
     }
 
+
+
+public function followUpPeriods(): HasMany
+{
+    return $this->hasMany(FollowUpPeriod::class);
+}
+
+
+
+public function isSuperAdmin(): bool { return $this->role === self::ROLE_SUPER_ADMIN; }
+public function isAdmin(): bool      { return $this->role === self::ROLE_ADMIN; }
+public function isSupervisor(): bool { return $this->role === self::ROLE_SUPERVISOR; }
+public function isMember(): bool     { return $this->role === self::ROLE_MEMBER; }
+
+public function isStaff(): bool
+{
+    return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_ADMIN, self::ROLE_SUPERVISOR], true);
+}
 
 
 }

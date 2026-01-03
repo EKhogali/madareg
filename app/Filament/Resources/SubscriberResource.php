@@ -25,6 +25,13 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\ColorColumn;
+use App\Models\FollowUpTemplate;
+use App\Models\User;
+
+
+use App\Models\Group;
+use App\Models\Stage;
+
 
 
 
@@ -90,6 +97,14 @@ class SubscriberResource extends Resource
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('name')->label(__('name'))->required(),
+
+                            Forms\Components\Select::make('follow_up_template_id')
+                                ->label('نموذج المتابعة')
+                                ->options(FollowUpTemplate::query()->where('is_active', true)->pluck('name_ar', 'id'))
+                                ->searchable()
+                                ->preload()
+                                ->required(),
+
                             DatePicker::make('birth_date')->label(__('birth_date')),
                             TextInput::make('birth_place')->label(__('birth_place')),
                             TextInput::make('residence_place')
@@ -161,8 +176,22 @@ class SubscriberResource extends Resource
                     ]),
 
                 Section::make(__('Parents\' Work'))
+
+
                     ->schema([
                         Grid::make(2)->schema([
+
+                            Select::make('user_id')
+                                ->label('المشرف / ولي الأمر')
+                                ->options(
+                                    User::query()
+                                        ->orderBy('name')
+                                        ->pluck('name', 'id')
+                                )
+                                ->searchable()
+                                ->required()
+                                ->disabled(fn() => auth()->user()->role === 4),
+
                             TextInput::make('father_job')
                                 ->label(__('father_job'))
                                 ->datalist(Subscriber::query()->distinct()->whereNotNull('father_job')->pluck('father_job')->filter()->values()->all()),
@@ -267,6 +296,13 @@ class SubscriberResource extends Resource
                     ->disk('public')
                     ->size(40)
                     ->defaultImageUrl(asset('images/default-user.png')),
+
+                Tables\Columns\TextColumn::make('followUpTemplate.name_ar')
+                    ->label('نموذج المتابعة')
+                    ->sortable()
+                    ->searchable(),
+
+
 
                 TextColumn::make('track_degree_id')
                     ->label('مجموع الدرجات')
@@ -396,6 +432,45 @@ class SubscriberResource extends Resource
                         2 => __('education_type_international'),
                     ]),
 
+                SelectFilter::make('follow_up_template_id')
+                    ->label('نموذج المتابعة')
+                    ->options(
+                        FollowUpTemplate::query()
+                            ->orderBy('name_ar')
+                            ->pluck('name_ar', 'id')
+                            ->toArray()
+                    )
+                    ->searchable(),
+
+                SelectFilter::make('follow_up_template_id')
+                    ->label('نموذج المتابعة')
+                    ->options(
+                        FollowUpTemplate::query()
+                            ->orderBy('name_ar')
+                            ->pluck('name_ar', 'id')
+                            ->toArray()
+                    )
+                    ->searchable(),
+                    SelectFilter::make('group')
+    ->label('المجموعة')
+    ->relationship('group', 'name')
+    ->searchable()
+    ->preload(),
+
+    SelectFilter::make('stage_id')
+    ->label('المرحلة')
+    ->options(
+        Stage::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray()
+    )
+    ->searchable(),
+
+
+
+
+
                 SelectFilter::make('health_status')
                     ->label(__('health_status'))
                     ->options([
@@ -430,12 +505,29 @@ class SubscriberResource extends Resource
             ])
 
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make()->label(__('Delete selected')),
+                //   Tables\Actions\DeleteBulkAction::make()->label(__('Delete selected')),
             ]);
     }
 
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+        return $user?->isStaff() ?? false;
+    }
 
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user?->isStaff()) {
+            return $query;
+        }
+
+        return $query->where('user_id', $user->id);
+    }
 
 
     public static function getRelations(): array
@@ -454,16 +546,16 @@ class SubscriberResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     $query = parent::getEloquentQuery();
 
-        if (auth()->user()->role === 3) {
-            $groupIds = auth()->user()->groups()->pluck('groups.id');
-            $query->whereIn('group_id', $groupIds);
-        }
+    //     if (auth()->user()->role === 3) {
+    //         $groupIds = auth()->user()->groups()->pluck('groups.id');
+    //         $query->whereIn('group_id', $groupIds);
+    //     }
 
-        return $query;
-    }
+    //     return $query;
+    // }
 
 }

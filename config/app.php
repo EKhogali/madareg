@@ -2,6 +2,8 @@
 
 return [
 
+    
+    App\Providers\AuthServiceProvider::class,
     /*
     |--------------------------------------------------------------------------
     | Application Name

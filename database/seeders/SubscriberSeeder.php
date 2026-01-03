@@ -7,11 +7,13 @@ use App\Models\User;
 use App\Models\Subscriber;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use App\Models\FollowUpTemplate;
 
 class SubscriberSeeder extends Seeder
 {
     public function run(): void
     {
+
         // Fetch all users with Member role (4)
         $members = User::where('role', 4)->get();
 
@@ -78,5 +80,33 @@ class SubscriberSeeder extends Seeder
         }
 
         $this->command->info('✅ Subscribers seeded for all member users successfully!');
+
+        $templateAId = FollowUpTemplate::where('code', 'template_a')->value('id');
+        $templateBId = FollowUpTemplate::where('code', 'template_b')->value('id');
+
+        if (!$templateAId || !$templateBId) {
+            $this->command->warn('⚠️ Follow-up templates not found. Please seed follow_up_templates first.');
+            return;
+        }
+
+        // Get user IDs that belong to groups 1,2,5
+        $userIdsForTemplateB = \Illuminate\Support\Facades\DB::table('group_user')
+            ->whereIn('group_id', [1, 2, 5])
+            ->pluck('user_id')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Users in groups (1,2,5) => Template B
+        Subscriber::whereIn('user_id', $userIdsForTemplateB)
+            ->update(['follow_up_template_id' => $templateBId]);
+
+        // Others => Template A
+        Subscriber::whereNotIn('user_id', $userIdsForTemplateB)
+            ->update(['follow_up_template_id' => $templateAId]);
+
+        $this->command->info('✅ follow_up_template_id assigned to subscribers based on user groups (1,2,5).');
+
+
     }
 }
