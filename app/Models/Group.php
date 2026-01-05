@@ -40,4 +40,10 @@ public function members()
         ->where('users.role', 4);
 }
 
+public function subscribers()
+{
+    return $this->hasMany(Subscriber::class);
+}
+
+
 }

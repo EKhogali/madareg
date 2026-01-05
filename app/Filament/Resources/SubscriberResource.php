@@ -69,6 +69,14 @@ class SubscriberResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->required(),
+
+                                Select::make('group_id')
+                                    ->label('المجموعة')
+                                    ->relationship('group', 'name')
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable(),
+
                         ]),
                     ])
                     ->extraAttributes([
@@ -431,6 +439,12 @@ class SubscriberResource extends Resource
                         1 => __('education_type_private'),
                         2 => __('education_type_international'),
                     ]),
+
+                SelectFilter::make('group_id')
+                    ->label('المجموعة')
+                    ->relationship('group', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 SelectFilter::make('follow_up_template_id')
                     ->label('نموذج المتابعة')

@@ -19,6 +19,62 @@
 
     @else
 
+        @php
+            /**
+             * ✅ Daily Columns Ordering
+             * Only for template 2:
+             *
+             * Order must be:
+             * الفجر, راتبة الفجر, الظهر, راتبة الظهر, العصر, راتبة العصر, المغرب, راتبة المغرب, العشاء, راتبة العشاء
+             */
+
+            $dailyItemsSorted = $dailyItems;
+
+            if ((int) $period->follow_up_template_id === 2) {
+
+                // Prayer order
+                $prayerOrder = [
+                    'الفجر' => 1,
+                    'الظهر' => 2,
+                    'العصر' => 3,
+                    'المغرب' => 4,
+                    'العشاء' => 5,
+                ];
+
+                // Helper to detect prayer
+                $detectPrayer = function (string $name) use ($prayerOrder): int {
+                    foreach ($prayerOrder as $prayer => $idx) {
+                        if (str_contains($name, $prayer)) {
+                            return $idx;
+                        }
+                    }
+                    return 99; // unknown goes last
+                };
+
+                // Helper: detect if it's "راتبة"
+                $isRaatiba = function (string $name): int {
+                    // ratiba should come AFTER the main prayer
+                    return str_contains($name, 'راتبة') ? 2 : 1;
+                };
+
+                $dailyItemsSorted = $dailyItems->sortBy(function ($item) use ($detectPrayer, $isRaatiba) {
+                    $name = $item->name_ar ?? '';
+
+                    $prayerIndex = $detectPrayer($name);
+                    $typeIndex = $isRaatiba($name);
+                    $sortOrder = (int) ($item->sort_order ?? 0);
+
+                    // prayer first, then (prayer vs ratiba), then sort_order
+                    return ($prayerIndex * 10000) + ($typeIndex * 100) + $sortOrder;
+                })->values();
+            }
+
+            // Weekly/monthly keep as-is
+            $weeklyItemsSorted = $weeklyItems;
+            $monthlyItemsSorted = $monthlyItems;
+        @endphp
+
+
         {{-- Summary --}}
         <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900">
@@ -41,18 +97,30 @@
             </div>
         </div>
 
+
         {{-- Actions --}}
         <div class="mt-6 flex flex-wrap items-center gap-3">
+
+            {{-- ✅ Manual Save --}}
             <x-filament::button wire:click="save" icon="heroicon-o-check">
                 حفظ
             </x-filament::button>
 
+            {{-- Month Lock --}}
             @if (!$period->is_month_locked)
-                <x-filament::button color="warning" wire:click="lockMonth" icon="heroicon-o-lock-closed">
+                <x-filament::button
+                    color="warning"
+                    wire:click="toggleLock('month', null, true)"
+                    icon="heroicon-o-lock-closed"
+                >
                     قفل الشهر
                 </x-filament::button>
             @else
-                <x-filament::button color="gray" wire:click="unlockMonth" icon="heroicon-o-lock-open">
+                <x-filament::button
+                    color="gray"
+                    wire:click="toggleLock('month', null, false)"
+                    icon="heroicon-o-lock-open"
+                >
                     فتح الشهر
                 </x-filament::button>
             @endif
@@ -60,7 +128,12 @@
             <div class="text-sm font-semibold {{ $period->is_month_locked ? 'text-danger-600' : 'text-success-600' }}">
                 {{ $period->is_month_locked ? 'الشهر مقفول' : 'الشهر مفتوح' }}
             </div>
+
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+                ✅ اختر ثم اضغط حفظ
+            </div>
         </div>
+
 
         {{-- Desktop --}}
         <div class="mt-6 hidden md:block">
@@ -72,7 +145,7 @@
                                 اليوم
                             </th>
 
-                            @foreach ($dailyItems as $item)
+                            @foreach ($dailyItemsSorted as $item)
                                 <th class="px-3 py-2 text-center border-b border-gray-200 dark:border-gray-800 whitespace-nowrap">
                                     {{ $item->name_ar }}
                                 </th>
@@ -95,14 +168,14 @@
                                     @endif
                                 </td>
 
-                                @foreach ($dailyItems as $item)
+                                @foreach ($dailyItemsSorted as $item)
                                     <td class="px-3 py-2 text-center">
                                         <input
-    type="checkbox"
-    class="rounded border-gray-300 dark:border-gray-700"
-    wire:model.defer="state.daily.{{ $day }}.{{ $item->id }}"
-    @disabled($period->is_month_locked || $rowLocked)
-/>
+                                            type="checkbox"
+                                            class="rounded border-gray-300 dark:border-gray-700"
+                                            wire:model.defer="state.daily.{{ $day }}.{{ $item->id }}"
+                                            @disabled($period->is_month_locked || $rowLocked)
+                                        />
                                     </td>
                                 @endforeach
                             </tr>
@@ -125,7 +198,7 @@
                                     <th class="px-3 py-2 text-right border-b border-gray-200 dark:border-gray-800">
                                         الأسبوع
                                     </th>
-                                    @foreach ($weeklyItems as $item)
+                                    @foreach ($weeklyItemsSorted as $item)
                                         <th class="px-3 py-2 text-center border-b border-gray-200 dark:border-gray-800 whitespace-nowrap">
                                             {{ $item->name_ar }}
                                         </th>
@@ -150,40 +223,38 @@
                                                 </div>
 
                                                 <div class="flex items-center gap-1">
-    @if ($lockedWeek)
-    <x-filament::button
-        size="xs"
-        color="gray"
-        icon="heroicon-o-lock-open"
-        wire:click="unlockWeek({{ $w }})"
-        :disabled="$period->is_month_locked"
-    >
-        فتح
-    </x-filament::button>
-@else
-    <x-filament::button
-        size="xs"
-        color="warning"
-        icon="heroicon-o-lock-closed"
-        wire:click="lockWeek({{ $w }})"
-        :disabled="$period->is_month_locked"
-    >
-        قفل
-    </x-filament::button>
-@endif
-
-</div>
-
+                                                    @if ($lockedWeek)
+                                                        <x-filament::button
+                                                            size="xs"
+                                                            color="gray"
+                                                            icon="heroicon-o-lock-open"
+                                                            wire:click="toggleLock('week', {{ $w }}, false)"
+                                                            :disabled="$period->is_month_locked"
+                                                        >
+                                                            فتح
+                                                        </x-filament::button>
+                                                    @else
+                                                        <x-filament::button
+                                                            size="xs"
+                                                            color="warning"
+                                                            icon="heroicon-o-lock-closed"
+                                                            wire:click="toggleLock('week', {{ $w }}, true)"
+                                                            :disabled="$period->is_month_locked"
+                                                        >
+                                                            قفل
+                                                        </x-filament::button>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </td>
 
-                                        @foreach ($weeklyItems as $item)
+                                        @foreach ($weeklyItemsSorted as $item)
                                             <td class="px-3 py-2 text-center">
                                                 <input
                                                     type="checkbox"
                                                     class="rounded border-gray-300 dark:border-gray-700"
                                                     wire:model.defer="state.weekly.{{ $w }}.{{ $item->id }}"
-    @disabled($period->is_month_locked || $rowLocked)
+                                                    @disabled($period->is_month_locked || $lockedWeek)
                                                 />
                                             </td>
                                         @endforeach
@@ -199,14 +270,13 @@
                     <div class="font-bold mb-3">أعمال الشهر</div>
 
                     <div class="space-y-3">
-                        @foreach ($monthlyItems as $item)
+                        @foreach ($monthlyItemsSorted as $item)
                             <label class="flex items-center gap-3">
-                                
                                 <input
                                     type="checkbox"
                                     class="rounded border-gray-300 dark:border-gray-700"
                                     wire:model.defer="state.monthly.{{ $item->id }}"
-                                    @disabled($period->is_month_locked || $rowLocked)
+                                    @disabled($period->is_month_locked)
                                 />
                                 <span>{{ $item->name_ar }}</span>
                             </label>

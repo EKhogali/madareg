@@ -10,52 +10,28 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Super Admin
-        User::create([
-            'name' => 'Ahmed',
-            'email' => 'a.hassi@gmail.com',
-            'password' => Hash::make('a@2025'),
-            'role' => User::ROLE_SUPER_ADMIN,
-        ]);
+        // ✅ Super Admins
+        User::updateOrCreate(
+            ['email' => 'a.hassi@gmail.com'],
+            [
+                'name' => 'Ahmed',
+                'password' => Hash::make('a@2025'),
+                'role' => User::ROLE_SUPER_ADMIN,
+                'status' => 1,
+            ]
+        );
 
-        User::create([
-            'name' => 'Elmo Super Admin',
-            'email' => 'elmo@gmail.com',
-            'password' => Hash::make('1'),
-            'role' => User::ROLE_SUPER_ADMIN,
-        ]);
+        User::updateOrCreate(
+            ['email' => 'elmo@gmail.com'],
+            [
+                'name' => 'Elmo Super Admin',
+                'password' => Hash::make('1'),
+                'role' => User::ROLE_SUPER_ADMIN,
+                'status' => 1,
+            ]
+        );
 
-        // Admin
-        // User::create([
-        //     'name' => 'Admin User',
-        //     'email' => 'admin@example.com',
-        //     'password' => Hash::make('password'),
-        //     'role' => User::ROLE_ADMIN,
-        // ]);
-
-        // // 3 Supervisors
-        // for ($i = 1; $i <= 3; $i++) {
-        //     User::create([
-        //         'name' => "Supervisor {$i}",
-        //         'email' => "supervisor{$i}@example.com",
-        //         'password' => Hash::make('password'),
-        //         'role' => User::ROLE_SUPERVISOR,
-        //     ]);
-        // }
-
-        // // 5 Members
-        // for ($i = 1; $i <= 5; $i++) {
-        //     User::create([
-        //         'name' => "Member {$i}",
-        //         'email' => "member{$i}@example.com",
-        //         'password' => Hash::make('password'),
-        //         'role' => User::ROLE_MEMBER,
-        //     ]);
-        // }
-
-
-
-
+        // ✅ Supervisors list
         $supervisors = [
             'ضيبه',
             'بشرى عبد القادر',
@@ -74,25 +50,31 @@ class UserSeeder extends Seeder
             'أحمد'
         ];
 
-        // Supervisors
         foreach ($supervisors as $index => $name) {
-            User::create([
-                'name' => $name,
-                'email' => 'supervisor' . ($index + 1) . '@example.com',
-                'password' => Hash::make('password'),
-                'role' => User::ROLE_SUPERVISOR,
-            ]);
+            User::updateOrCreate(
+                ['email' => 'supervisor' . ($index + 1) . '@example.com'],
+                [
+                    'name' => $name,
+                    'password' => Hash::make('password'),
+                    'role' => User::ROLE_SUPERVISOR,
+                    'status' => 1,
+                ]
+            );
         }
 
-        // Members (create 120 total random members)
+        // ✅ Parents (Members) => 120
         for ($i = 1; $i <= 120; $i++) {
-            User::create([
-                'name' => "عضو {$i}",
-                'email' => "member{$i}@example.com",
-                'password' => Hash::make('password'),
-                'role' => User::ROLE_MEMBER,
-            ]);
+            User::updateOrCreate(
+                ['email' => "member{$i}@example.com"],
+                [
+                    'name' => "ولي أمر {$i}",
+                    'password' => Hash::make('password'),
+                    'role' => User::ROLE_MEMBER,
+                    'status' => 1,
+                ]
+            );
         }
 
+        $this->command->info('✅ Users seeded successfully (SuperAdmins + Supervisors + Parents).');
     }
 }

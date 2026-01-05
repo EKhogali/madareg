@@ -88,5 +88,10 @@ public function isStaff(): bool
     return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_ADMIN, self::ROLE_SUPERVISOR], true);
 }
 
+public function subscribers()
+{
+    return $this->hasMany(Subscriber::class);
+}
+
 
 }

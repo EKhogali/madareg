@@ -20,6 +20,7 @@ return new class extends Migration {
             $table->string('birth_place')->nullable();
             $table->string('residence_place')->nullable();
             $table->string('nationality')->nullable();
+            $table->unsignedTinyInteger('gender')->nullable()->index(); // 1=Male,2=Female
 
             $table->foreignId('track_degree_id')->nullable()->constrained('track_degrees')->nullOnDelete();
             $table->foreignId('stage_id')->nullable()->constrained('stages')->nullOnDelete();
@@ -73,6 +74,13 @@ return new class extends Migration {
                 ->nullable()
                 ->constrained('follow_up_templates')
                 ->nullOnDelete();
+
+            $table->foreignId('group_id')
+                ->nullable()
+                ->constrained('groups')
+                ->nullOnDelete();
+
+            $table->index('group_id');
 
             $table->index(['follow_up_template_id']);
         });

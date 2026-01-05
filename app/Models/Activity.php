@@ -21,11 +21,6 @@ class Activity extends Model
         return $this->belongsTo(StageTopic::class);
     }
 
-    // // Activity.php
-    // public function supervisorDetails()
-    // {
-    //     return $this->hasMany(SupervisorActivityDetail::class);
-    // }
 
     public function supervisorActivityDetails()
 {

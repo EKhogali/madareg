@@ -109,4 +109,36 @@ class FollowUpPeriod extends Model
 
         return $this->isWeekLocked($weekIndex);
     }
+
+
+
+
+
+public function requiredCount(): int
+{
+    $items = FollowUpItem::where('follow_up_template_id', $this->follow_up_template_id)
+        ->where('is_active', 1)
+        ->get();
+
+    $dailyCount = $items->where('frequency', 1)->count();
+    $weeklyCount = $items->where('frequency', 2)->count();
+    $monthlyCount = $items->where('frequency', 3)->count();
+
+    $days = Carbon::createFromDate($this->year, $this->month, 1)->daysInMonth;
+
+    return ($dailyCount * $days) + ($weeklyCount * 5) + ($monthlyCount);
+}
+
+public function doneCount(): int
+{
+    return $this->entries()->where('value', 1)->count();
+}
+
+public function completionPercent(): float
+{
+    $required = $this->requiredCount();
+    if ($required === 0) return 0;
+
+    return round(($this->doneCount() / $required) * 100, 1);
+}
 }

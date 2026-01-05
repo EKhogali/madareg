@@ -13,7 +13,7 @@ class FollowUpTemplateBSeeder extends Seeder
         // Template B
         $template = FollowUpTemplate::updateOrCreate(
             ['code' => 'template_b'],
-            ['name_ar' => 'نموذج المتابعة - فئة B (راتبتها)', 'is_active' => true]
+            ['name_ar' => 'نموذج المتابعة - فئة B', 'is_active' => true]
         );
 
         // Frequency: 1 daily, 2 weekly, 3 monthly
@@ -28,13 +28,14 @@ class FollowUpTemplateBSeeder extends Seeder
         // الأعمال اليومية
         // =======================
 
-        // الصلوات الخمس ورداتها (لكل صلاة: راتبتها + جماعة)
+        // ✅ Correct order: جماعة THEN راتبتها
         $prayers = ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 
         foreach ($prayers as $p) {
+
             $items[] = [
                 'follow_up_template_id' => $template->id,
-                'name_ar' => "{$p} - راتبتها",
+                'name_ar' => "{$p} ",
                 'group_ar' => 'الصلوات الخمس ورداتها',
                 'frequency' => $DAILY,
                 'sort_order' => $order++,
@@ -43,7 +44,7 @@ class FollowUpTemplateBSeeder extends Seeder
 
             $items[] = [
                 'follow_up_template_id' => $template->id,
-                'name_ar' => "{$p} - جماعة",
+                'name_ar' => "{$p} - راتبتها",
                 'group_ar' => 'الصلوات الخمس ورداتها',
                 'frequency' => $DAILY,
                 'sort_order' => $order++,
@@ -115,7 +116,7 @@ class FollowUpTemplateBSeeder extends Seeder
             ];
         }
 
-        // Upsert (avoid duplicates if re-run)
+        // ✅ Upsert
         foreach ($items as $row) {
             FollowUpItem::updateOrCreate(
                 [
