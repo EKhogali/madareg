@@ -33,9 +33,9 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::hex('#F4A623'),        // Warm orange
-                'accent'  => Color::hex('#0076BF'),        // Light blue
-                'danger'  => Color::hex('#D4881F'),        // Bronze / warning
-                'gray'    => Color::hex('#333333'),        // Dark text
+                'accent' => Color::hex('#0076BF'),        // Light blue
+                'danger' => Color::hex('#D4881F'),        // Bronze / warning
+                'gray' => Color::hex('#333333'),        // Dark text
             ])
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -45,9 +45,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->renderHook(
-    PanelsRenderHook::BODY_END,
-    fn () => new HtmlString('<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>')
-)
+                PanelsRenderHook::BODY_END,
+                fn() => new HtmlString('<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>')
+            )
+            ->renderHook(
+                'panels::head.end',
+                fn() => view('filament.pwa-head')
+            )
 
             ->widgets([
                 // Widgets\AccountWidget::class,
@@ -64,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            
+
             ->authMiddleware([
                 Authenticate::class,
             ]);
