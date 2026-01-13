@@ -52,7 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 'panels::head.end',
                 fn() => view('filament.pwa-head')
             )
-
+            ->brandName('مدارج النور')
             ->widgets([
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
