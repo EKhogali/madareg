@@ -287,10 +287,157 @@
             </div>
         </div>
 
-        {{-- Mobile disabled for now --}}
-        <div class="mt-6 md:hidden p-4 rounded-xl border border-gray-200 dark:border-gray-800">
-            Mobile view temporarily disabled
+        {{-- ✅ Mobile --}}
+<div class="mt-6 md:hidden space-y-6">
+
+    {{-- Day Controls --}}
+    @php
+        $mobileDay = (int) ($this->mobileDay ?? 1);
+        $mobileWeekIndex = (int) ceil($mobileDay / 7);
+        $mobileWeekLocked = $period->isWeekLocked($mobileWeekIndex);
+        $mobileLocked = $period->is_month_locked || $mobileWeekLocked;
+    @endphp
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-950">
+        <div class="flex items-center justify-between gap-3">
+            <div class="font-bold">
+                اليوم {{ $mobileDay }}
+                <span class="text-xs text-gray-500"> (الأسبوع {{ $mobileWeekIndex }})</span>
+                @if($mobileLocked)
+                    <span class="text-xs text-danger-600 font-bold">🔒 مقفول</span>
+                @else
+                    <span class="text-xs text-success-600 font-bold">✅ مفتوح</span>
+                @endif
+            </div>
+
+            <div class="flex items-center gap-2">
+                <x-filament::button size="sm" color="gray" wire:click="prevDay" icon="heroicon-o-chevron-right">
+                    السابق
+                </x-filament::button>
+
+                <x-filament::button size="sm" color="gray" wire:click="nextDay" icon="heroicon-o-chevron-left">
+                    التالي
+                </x-filament::button>
+            </div>
         </div>
+
+        {{-- Jump to day --}}
+        <div class="mt-4">
+            <label class="text-xs text-gray-500">اذهب إلى يوم</label>
+            <input
+                type="number"
+                min="1"
+                max="{{ $this->daysInMonth() }}"
+                class="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+                wire:model.lazy="mobileDay"
+            />
+        </div>
+
+        {{-- Week lock/unlock for current mobile week --}}
+        <div class="mt-4 flex items-center justify-between gap-2">
+            <div class="text-sm font-semibold">
+                قفل الأسبوع {{ $mobileWeekIndex }}
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if($mobileWeekLocked)
+                    <x-filament::button
+                        size="sm"
+                        color="gray"
+                        icon="heroicon-o-lock-open"
+                        wire:click="toggleLock('week', {{ $mobileWeekIndex }}, false)"
+                        :disabled="$period->is_month_locked"
+                    >
+                        فتح
+                    </x-filament::button>
+                @else
+                    <x-filament::button
+                        size="sm"
+                        color="warning"
+                        icon="heroicon-o-lock-closed"
+                        wire:click="toggleLock('week', {{ $mobileWeekIndex }}, true)"
+                        :disabled="$period->is_month_locked"
+                    >
+                        قفل
+                    </x-filament::button>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Daily Items (for the selected day) --}}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-950">
+        <div class="font-bold mb-3">أعمال اليوم</div>
+
+        <div class="space-y-3">
+            @foreach ($dailyItemsSorted as $item)
+                <label class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <div class="text-sm font-semibold">
+                        {{ $item->name_ar }}
+                    </div>
+
+                    <input
+                        type="checkbox"
+                        class="rounded border-gray-300 dark:border-gray-700"
+                        wire:model.defer="state.daily.{{ $mobileDay }}.{{ $item->id }}"
+                        @disabled($mobileLocked)
+                    />
+                </label>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Weekly Items (for the selected day week) --}}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-950">
+        <div class="flex items-center justify-between mb-3">
+            <div class="font-bold">أعمال الأسبوع {{ $mobileWeekIndex }}</div>
+            <div class="text-xs {{ $mobileWeekLocked ? 'text-danger-600' : 'text-success-600' }}">
+                {{ $mobileWeekLocked ? 'مقفول' : 'مفتوح' }}
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            @foreach ($weeklyItemsSorted as $item)
+                <label class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <div class="text-sm font-semibold">
+                        {{ $item->name_ar }}
+                    </div>
+
+                    <input
+                        type="checkbox"
+                        class="rounded border-gray-300 dark:border-gray-700"
+                        wire:model.defer="state.weekly.{{ $mobileWeekIndex }}.{{ $item->id }}"
+                        @disabled($period->is_month_locked || $mobileWeekLocked)
+                    />
+                </label>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Monthly Items --}}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-950">
+        <div class="font-bold mb-3">أعمال الشهر</div>
+
+        <div class="space-y-3">
+            @foreach ($monthlyItemsSorted as $item)
+                <label class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                    <div class="text-sm font-semibold">
+                        {{ $item->name_ar }}
+                    </div>
+
+                    <input
+                        type="checkbox"
+                        class="rounded border-gray-300 dark:border-gray-700"
+                        wire:model.defer="state.monthly.{{ $item->id }}"
+                        @disabled($period->is_month_locked)
+                    />
+                </label>
+            @endforeach
+        </div>
+    </div>
+
+</div>
+
 
     @endif
 
