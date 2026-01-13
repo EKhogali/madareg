@@ -1,0 +1,6 @@
+body[data-page="app-launcher"] .fi-sidebar {
+    display: none !important;
+}
+body[data-page="app-launcher"] .fi-main {
+    margin-right: 0 !important;
+}
