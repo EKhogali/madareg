@@ -4,59 +4,78 @@ namespace App\Filament\Resources\ActivityResource\Pages;
 
 use App\Filament\Resources\ActivityResource;
 use App\Models\ActivityDetail;
+use App\Models\SupervisorActivityDetail;
+use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Tables;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
 
-class ViewActivity extends ViewRecord implements HasTable
+class ViewActivity extends ViewRecord
 {
-    use InteractsWithTable;
-
     protected static string $resource = ActivityResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [];
-    }
-
-    protected function getTableQuery()
-    {
-        return ActivityDetail::query()
-            ->where('activity_id', $this->record->id)
-            ->with('subscriber');
-    }
-
-    protected function getTableColumns(): array
-    {
         return [
-            Tables\Columns\TextColumn::make('subscriber.name')->label('العضو'),
-            Tables\Columns\TextColumn::make('evaluation')->label('التقييم'),
-            Tables\Columns\TextColumn::make('notes')->label('ملاحظات'),
-        ];
-    }
+            Actions\EditAction::make(),
 
-    protected function getTableActions(): array
-    {
-        return [
-            EditAction::make(),
-            DeleteAction::make(),
-        ];
-    }
+            // ✅ Add Subscriber Button
+            Actions\Action::make('addSubscriber')
+                ->label('إضافة مشترك للنشاط')
+                ->icon('heroicon-o-user-plus')
+                ->color('success')
+                ->modalHeading('إضافة مشترك للنشاط')
+                ->form([
+                    \Filament\Forms\Components\Select::make('subscriber_id')
+                        ->label('المشترك')
+                        ->relationship('details.subscriber', 'name')
+                        ->searchable()
+                        ->required(),
 
-    protected function getTableHeaderActions(): array
-    {
-        return [
-            CreateAction::make()->label('إضافة تقييم جديد')
-                ->model(ActivityDetail::class)
-                ->using(function (array $data, $record) {
-                    $data['activity_id'] = $this->record->id;
-                    $record->fill($data)->save();
-                    return $record;
-                }),
+                    \Filament\Forms\Components\TextInput::make('evaluation')
+                        ->label('التقييم')
+                        ->numeric()
+                        ->minValue(1)
+                        ->maxValue(10)
+                        ->required(),
+
+                    \Filament\Forms\Components\Textarea::make('notes')
+                        ->label('ملاحظات')
+                        ->rows(2),
+                ])
+                ->action(function (array $data): void {
+                    ActivityDetail::create([
+                        'activity_id' => $this->record->id,
+                        'subscriber_id' => $data['subscriber_id'],
+                        'evaluation' => $data['evaluation'],
+                        'notes' => $data['notes'] ?? null,
+                    ]);
+                })
+                ->successNotificationTitle('تمت إضافة المشترك ✅'),
+
+            // ✅ Add Supervisor Button
+            Actions\Action::make('addSupervisor')
+                ->label('إضافة مشرف للنشاط')
+                ->icon('heroicon-o-user-plus')
+                ->color('warning')
+                ->modalHeading('إضافة مشرف للنشاط')
+                ->form([
+                    \Filament\Forms\Components\Select::make('supervisor_id')
+                        ->label('المشرف')
+                        ->relationship('supervisorActivityDetails.supervisor', 'name')
+                        ->searchable()
+                        ->required(),
+
+                    \Filament\Forms\Components\Textarea::make('notes')
+                        ->label('ملاحظات')
+                        ->rows(2),
+                ])
+                ->action(function (array $data): void {
+                    SupervisorActivityDetail::create([
+                        'activity_id' => $this->record->id,
+                        'supervisor_id' => $data['supervisor_id'],
+                        'notes' => $data['notes'] ?? null,
+                    ]);
+                })
+                ->successNotificationTitle('تمت إضافة المشرف ✅'),
         ];
     }
 }
