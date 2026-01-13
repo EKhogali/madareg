@@ -49,6 +49,19 @@ class FollowUpMonthlySheet extends Page
         'monthly' => [],
     ];
 
+
+    public function prevDay(): void
+    {
+        $this->mobileDay = max(1, $this->mobileDay - 1);
+        $this->clampMobileControls();
+    }
+
+    public function nextDay(): void
+    {
+        $this->mobileDay = min($this->daysInMonth(), $this->mobileDay + 1);
+        $this->clampMobileControls();
+    }
+
     public function getTitle(): string
     {
         return 'المتابعة الشهرية';
@@ -96,47 +109,47 @@ class FollowUpMonthlySheet extends Page
     {
         return $form
             ->schema([
-                Forms\Components\Grid::make()
-                    ->columns([
-                        'default' => 1,
-                        'md' => 3,
-                    ])
-                    ->schema([
-                        Forms\Components\Select::make('subscriberId')
-                            ->label('المشترك')
-                            ->preload()
-                            ->options(
-                                fn () => Subscriber::query()
-                                    ->where('user_id', Auth::id())
-                                    ->orderBy('name')
-                                    ->pluck('name', 'id')
-                                    ->toArray()
-                            )
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function () {
-                                $this->loadPeriodAndItems();
-                            }),
+                    Forms\Components\Grid::make()
+                        ->columns([
+                                'default' => 1,
+                                'md' => 3,
+                            ])
+                        ->schema([
+                                Forms\Components\Select::make('subscriberId')
+                                    ->label('المشترك')
+                                    ->preload()
+                                    ->options(
+                                        fn() => Subscriber::query()
+                                            ->where('user_id', Auth::id())
+                                            ->orderBy('name')
+                                            ->pluck('name', 'id')
+                                            ->toArray()
+                                    )
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function () {
+                                        $this->loadPeriodAndItems();
+                                    }),
 
-                        Forms\Components\Select::make('month')
-                            ->label('الشهر')
-                            ->options($this->monthOptions())
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function () {
-                                $this->loadPeriodAndItems();
-                            }),
+                                Forms\Components\Select::make('month')
+                                    ->label('الشهر')
+                                    ->options($this->monthOptions())
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function () {
+                                        $this->loadPeriodAndItems();
+                                    }),
 
-                        Forms\Components\Select::make('year')
-                            ->label('السنة')
-                            ->options($this->yearOptions())
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function () {
-                                $this->loadPeriodAndItems();
-                            }),
-                    ]),
-            ]);
+                                Forms\Components\Select::make('year')
+                                    ->label('السنة')
+                                    ->options($this->yearOptions())
+                                    ->required()
+                                    ->reactive()
+                                    ->afterStateUpdated(function () {
+                                        $this->loadPeriodAndItems();
+                                    }),
+                            ]),
+                ]);
     }
 
     public function monthOptions(): array
@@ -162,7 +175,7 @@ class FollowUpMonthlySheet extends Page
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn ($y) => [$y => (string) $y])
+            ->mapWithKeys(fn($y) => [$y => (string) $y])
             ->toArray();
     }
 
@@ -300,152 +313,155 @@ class FollowUpMonthlySheet extends Page
 
 
 
-public function save(): void
-{
-    if (!$this->period) {
-        return;
-    }
-
-    // Month locked => block saving
-    if ($this->period->is_month_locked) {
-        Notification::make()
-            ->title('هذا الشهر مقفول')
-            ->danger()
-            ->send();
-        return;
-    }
-
-    // =========================
-    // Save DAILY
-    // =========================
-    foreach ($this->state['daily'] as $day => $items) {
-        $day = (int) $day;
-
-        if ($day < 1 || $day > $this->daysInMonth()) {
-            continue;
+    public function save(): void
+    {
+        if (!$this->period) {
+            return;
         }
 
-        $date = Carbon::createFromDate($this->year, $this->month, $day)->toDateString();
-        $weekIndex = (int) ceil($day / 7);
-
-        // Week locked => skip daily saves in this week
-        if ($this->period->isWeekLocked($weekIndex)) {
-            continue;
+        // Month locked => block saving
+        if ($this->period->is_month_locked) {
+            Notification::make()
+                ->title('هذا الشهر مقفول')
+                ->danger()
+                ->send();
+            return;
         }
 
-        foreach ($items as $itemId => $checked) {
+        // =========================
+        // Save DAILY
+        // =========================
+        foreach ($this->state['daily'] as $day => $items) {
+            $day = (int) $day;
+
+            if ($day < 1 || $day > $this->daysInMonth()) {
+                continue;
+            }
+
+            $date = Carbon::createFromDate($this->year, $this->month, $day)->toDateString();
+            $weekIndex = (int) ceil($day / 7);
+
+            // Week locked => skip daily saves in this week
+            if ($this->period->isWeekLocked($weekIndex)) {
+                continue;
+            }
+
+            foreach ($items as $itemId => $checked) {
+                $itemId = (int) $itemId;
+                $checked = (bool) $checked;
+
+                if ($itemId < 1)
+                    continue;
+
+                if ($checked) {
+                    FollowUpEntry::updateOrCreate(
+                        [
+                            'follow_up_period_id' => $this->period->id,
+                            'follow_up_item_id' => $itemId,
+                            'date' => $date,
+                        ],
+                        [
+                            'week_index' => null,
+                            'value' => 1,
+                        ]
+                    );
+                } else {
+                    FollowUpEntry::query()
+                        ->where('follow_up_period_id', $this->period->id)
+                        ->where('follow_up_item_id', $itemId)
+                        ->whereDate('date', $date)
+                        ->delete();
+                }
+            }
+        }
+
+        // =========================
+        // Save WEEKLY
+        // =========================
+        foreach ($this->state['weekly'] as $weekIndex => $items) {
+            $weekIndex = (int) $weekIndex;
+
+            if ($weekIndex < 1 || $weekIndex > 5) {
+                continue;
+            }
+
+            if ($this->period->isWeekLocked($weekIndex)) {
+                continue;
+            }
+
+            foreach ($items as $itemId => $checked) {
+                $itemId = (int) $itemId;
+                $checked = (bool) $checked;
+
+                if ($itemId < 1)
+                    continue;
+
+                if ($checked) {
+                    FollowUpEntry::updateOrCreate(
+                        [
+                            'follow_up_period_id' => $this->period->id,
+                            'follow_up_item_id' => $itemId,
+                            'week_index' => $weekIndex,
+                        ],
+                        [
+                            'date' => null,
+                            'value' => 1,
+                        ]
+                    );
+                } else {
+                    FollowUpEntry::query()
+                        ->where('follow_up_period_id', $this->period->id)
+                        ->where('follow_up_item_id', $itemId)
+                        ->where('week_index', $weekIndex)
+                        ->delete();
+                }
+            }
+        }
+
+        // =========================
+        // Save MONTHLY (safe without DB unique)
+        // =========================
+        foreach ($this->state['monthly'] as $itemId => $checked) {
             $itemId = (int) $itemId;
             $checked = (bool) $checked;
 
-            if ($itemId < 1) continue;
+            if ($itemId < 1)
+                continue;
+
+            $query = FollowUpEntry::query()
+                ->where('follow_up_period_id', $this->period->id)
+                ->where('follow_up_item_id', $itemId)
+                ->whereNull('date')
+                ->whereNull('week_index');
 
             if ($checked) {
-                FollowUpEntry::updateOrCreate(
-                    [
+                // Defensive: ensure only 1 row exists
+                $existing = $query->first();
+
+                if ($existing) {
+                    $existing->update(['value' => 1]);
+                } else {
+                    FollowUpEntry::create([
                         'follow_up_period_id' => $this->period->id,
                         'follow_up_item_id' => $itemId,
-                        'date' => $date,
-                    ],
-                    [
+                        'date' => null,
                         'week_index' => null,
                         'value' => 1,
-                    ]
-                );
+                    ]);
+                }
             } else {
-                FollowUpEntry::query()
-                    ->where('follow_up_period_id', $this->period->id)
-                    ->where('follow_up_item_id', $itemId)
-                    ->whereDate('date', $date)
-                    ->delete();
+                $query->delete();
             }
         }
+
+        Notification::make()
+            ->title('تم الحفظ ✅')
+            ->success()
+            ->send();
+
+        // Reload to stay consistent
+        $this->loadPeriodAndItems();
     }
-
-    // =========================
-    // Save WEEKLY
-    // =========================
-    foreach ($this->state['weekly'] as $weekIndex => $items) {
-        $weekIndex = (int) $weekIndex;
-
-        if ($weekIndex < 1 || $weekIndex > 5) {
-            continue;
-        }
-
-        if ($this->period->isWeekLocked($weekIndex)) {
-            continue;
-        }
-
-        foreach ($items as $itemId => $checked) {
-            $itemId = (int) $itemId;
-            $checked = (bool) $checked;
-
-            if ($itemId < 1) continue;
-
-            if ($checked) {
-                FollowUpEntry::updateOrCreate(
-                    [
-                        'follow_up_period_id' => $this->period->id,
-                        'follow_up_item_id' => $itemId,
-                        'week_index' => $weekIndex,
-                    ],
-                    [
-                        'date' => null,
-                        'value' => 1,
-                    ]
-                );
-            } else {
-                FollowUpEntry::query()
-                    ->where('follow_up_period_id', $this->period->id)
-                    ->where('follow_up_item_id', $itemId)
-                    ->where('week_index', $weekIndex)
-                    ->delete();
-            }
-        }
-    }
-
-    // =========================
-    // Save MONTHLY (safe without DB unique)
-    // =========================
-    foreach ($this->state['monthly'] as $itemId => $checked) {
-        $itemId = (int) $itemId;
-        $checked = (bool) $checked;
-
-        if ($itemId < 1) continue;
-
-        $query = FollowUpEntry::query()
-            ->where('follow_up_period_id', $this->period->id)
-            ->where('follow_up_item_id', $itemId)
-            ->whereNull('date')
-            ->whereNull('week_index');
-
-        if ($checked) {
-            // Defensive: ensure only 1 row exists
-            $existing = $query->first();
-
-            if ($existing) {
-                $existing->update(['value' => 1]);
-            } else {
-                FollowUpEntry::create([
-                    'follow_up_period_id' => $this->period->id,
-                    'follow_up_item_id' => $itemId,
-                    'date' => null,
-                    'week_index' => null,
-                    'value' => 1,
-                ]);
-            }
-        } else {
-            $query->delete();
-        }
-    }
-
-    Notification::make()
-        ->title('تم الحفظ ✅')
-        ->success()
-        ->send();
-
-    // Reload to stay consistent
-    $this->loadPeriodAndItems();
-}
 
 
     /**
@@ -453,78 +469,79 @@ public function save(): void
      */
     public function updatedState($value, string $key): void
     {
-    //     if (!$this->period) {
-    //         return;
-    //     }
+        //     if (!$this->period) {
+        //         return;
+        //     }
 
-    //     // Month locked => block update (revert)
-    //     if ($this->period->is_month_locked) {
-    //         data_set($this->state, $key, !$value);
-    //         Notification::make()->title('الشهر مقفول')->danger()->send();
-    //         return;
-    //     }
+        //     // Month locked => block update (revert)
+        //     if ($this->period->is_month_locked) {
+        //         data_set($this->state, $key, !$value);
+        //         Notification::make()->title('الشهر مقفول')->danger()->send();
+        //         return;
+        //     }
 
-    //     $parts = explode('.', $key);
-    //     $type = $parts[0] ?? null;
+        //     $parts = explode('.', $key);
+        //     $type = $parts[0] ?? null;
 
-    //     if ($type === 'daily') {
-    //         $day = (int) ($parts[1] ?? 0);
-    //         $itemId = (int) ($parts[2] ?? 0);
+        //     if ($type === 'daily') {
+        //         $day = (int) ($parts[1] ?? 0);
+        //         $itemId = (int) ($parts[2] ?? 0);
 
-    //         if ($day < 1 || $day > $this->daysInMonth() || $itemId < 1) {
-    //             return;
-    //         }
+        //         if ($day < 1 || $day > $this->daysInMonth() || $itemId < 1) {
+        //             return;
+        //         }
 
-    //         $weekIndex = (int) ceil($day / 7);
+        //         $weekIndex = (int) ceil($day / 7);
 
-    //         if ($this->period->isWeekLocked($weekIndex)) {
-    //             data_set($this->state, $key, !$value);
-    //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
-    //             return;
-    //         }
+        //         if ($this->period->isWeekLocked($weekIndex)) {
+        //             data_set($this->state, $key, !$value);
+        //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
+        //             return;
+        //         }
 
-    //         $date = Carbon::createFromDate($this->year, $this->month, $day)->toDateString();
+        //         $date = Carbon::createFromDate($this->year, $this->month, $day)->toDateString();
 
-    //         $this->upsertDailyEntry($itemId, (bool) $value, $date);
+        //         $this->upsertDailyEntry($itemId, (bool) $value, $date);
 
-    //         return;
-    //     }
+        //         return;
+        //     }
 
-    //     if ($type === 'weekly') {
-    //         $weekIndex = (int) ($parts[1] ?? 0);
-    //         $itemId = (int) ($parts[2] ?? 0);
+        //     if ($type === 'weekly') {
+        //         $weekIndex = (int) ($parts[1] ?? 0);
+        //         $itemId = (int) ($parts[2] ?? 0);
 
-    //         if ($weekIndex < 1 || $weekIndex > 5 || $itemId < 1) {
-    //             return;
-    //         }
+        //         if ($weekIndex < 1 || $weekIndex > 5 || $itemId < 1) {
+        //             return;
+        //         }
 
-    //         if ($this->period->isWeekLocked($weekIndex)) {
-    //             data_set($this->state, $key, !$value);
-    //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
-    //             return;
-    //         }
+        //         if ($this->period->isWeekLocked($weekIndex)) {
+        //             data_set($this->state, $key, !$value);
+        //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
+        //             return;
+        //         }
 
-    //         $this->upsertWeeklyEntry($itemId, (bool) $value, $weekIndex);
+        //         $this->upsertWeeklyEntry($itemId, (bool) $value, $weekIndex);
 
-    //         return;
-    //     }
+        //         return;
+        //     }
 
-    //     if ($type === 'monthly') {
-    //         $itemId = (int) ($parts[1] ?? 0);
+        //     if ($type === 'monthly') {
+        //         $itemId = (int) ($parts[1] ?? 0);
 
-    //         if ($itemId < 1) {
-    //             return;
-    //         }
+        //         if ($itemId < 1) {
+        //             return;
+        //         }
 
-    //         $this->upsertMonthlyEntry($itemId, (bool) $value);
+        //         $this->upsertMonthlyEntry($itemId, (bool) $value);
 
-    //         return;
-    //     }
+        //         return;
+        //     }
     }
 
     protected function upsertDailyEntry(int $itemId, bool $checked, string $date): void
     {
-        if (!$this->period) return;
+        if (!$this->period)
+            return;
 
         if ($checked) {
             FollowUpEntry::updateOrCreate(
@@ -549,7 +566,8 @@ public function save(): void
 
     protected function upsertWeeklyEntry(int $itemId, bool $checked, int $weekIndex): void
     {
-        if (!$this->period) return;
+        if (!$this->period)
+            return;
 
         if ($checked) {
             FollowUpEntry::updateOrCreate(
@@ -577,7 +595,8 @@ public function save(): void
      */
     protected function upsertMonthlyEntry(int $itemId, bool $checked): void
     {
-        if (!$this->period) return;
+        if (!$this->period)
+            return;
 
         $query = FollowUpEntry::query()
             ->where('follow_up_period_id', $this->period->id)
@@ -614,7 +633,8 @@ public function save(): void
      */
     public function toggleLock(string $scope, ?int $index = null, bool $locked = true): void
     {
-        if (!$this->period) return;
+        if (!$this->period)
+            return;
 
         if ($scope === 'month') {
             $this->period->update([
