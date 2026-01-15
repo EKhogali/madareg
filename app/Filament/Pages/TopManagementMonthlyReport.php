@@ -64,6 +64,8 @@ class TopManagementMonthlyReport extends Page
         return 'تقرير الإدارة العليا';
     }
 
+
+    
     public static function canAccess(): bool
     {
         $user = Auth::user();

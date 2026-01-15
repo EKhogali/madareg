@@ -17,6 +17,8 @@ return new class extends Migration {
             $table->unsignedTinyInteger('evaluation'); // 1 to 10
             $table->text('notes')->nullable();
             $table->timestamps();
+
+            $table->unique(['activity_id', 'subscriber_id']);
         });
     }
 

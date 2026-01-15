@@ -49,6 +49,7 @@ class FollowUpMonthlySheet extends Page
         'monthly' => [],
     ];
 
+    
     public static function canAccess(): bool
     {
         return auth()->check() && auth()->user()->isStaff();

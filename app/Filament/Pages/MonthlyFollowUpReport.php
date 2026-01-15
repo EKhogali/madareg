@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\User;
+
 use App\Models\Group;
 use App\Models\Subscriber;
 use App\Models\FollowUpPeriod;
@@ -121,13 +123,13 @@ class MonthlyFollowUpReport extends Page
         $query = Group::query()->orderBy('name');
 
         // Supervisor sees only their groups
-        if (Auth::user()?->role === 3) {
+        if (Auth::user()?->role === User::ROLE_SUPERVISOR) {
             $groupIds = Auth::user()->groups()->pluck('groups.id');
             $query->whereIn('id', $groupIds);
         }
 
         // Parent (role 4): optional return groups of their subscribers only
-        if (Auth::user()?->role === 4) {
+        if (Auth::user()?->role === User::ROLE_MEMBER) {
             $groupIds = Subscriber::query()
                 ->where('user_id', Auth::id())
                 ->whereNotNull('group_id')
@@ -344,4 +346,6 @@ class MonthlyFollowUpReport extends Page
         // ✅ Ranking by total
         usort($this->reportRows, fn ($a, $b) => $b['total'] <=> $a['total']);
     }
+
+    
 }

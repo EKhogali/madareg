@@ -25,8 +25,26 @@ class ActivityDetailsRelationManager extends RelationManager
     {
         return $form->schema([
             Select::make('subscriber_id')
-                ->relationship('subscriber', 'name')->label('المشترك')
+                ->label('المشترك')
+                ->relationship(
+                    name: 'subscriber',
+                    titleAttribute: 'name',
+                    modifyQueryUsing: function ($query) {
+                        $user = auth()->user();
+
+                        // Supervisor: only subscribers in their groups
+                        if ($user?->isSupervisor()) {
+                            $groupIds = $user->groups()->pluck('groups.id');
+                            $query->whereIn('group_id', $groupIds);
+                        }
+
+                        return $query;
+                    }
+                )
+                ->preload()
+                ->searchable()
                 ->required(),
+
             TextInput::make('evaluation')->label('التقييم')
                 ->numeric()->minValue(1)->maxValue(10)->required(),
             Textarea::make('notes')->rows(2)->label('ملاحظات'),
@@ -41,43 +59,44 @@ class ActivityDetailsRelationManager extends RelationManager
             TextColumn::make('notes')->wrap()->label('ملاحظات'),
         ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(), // add button
-                // Tables\Actions\CreateAction::make()
-                //     ->label('إضافة تقييم جديد')
-                //     ->model(\App\Models\ActivityDetail::class)
-                //     ->using(function (array $data, $record) {
-                //         $data['activity_id'] = $record->id;
-                //         return ActivityDetail::create($data);
-                //     })
+                    Tables\Actions\CreateAction::make(), // add button
+                    // Tables\Actions\CreateAction::make()
+                    //     ->label('إضافة تقييم جديد')
+                    //     ->model(\App\Models\ActivityDetail::class)
+                    //     ->using(function (array $data, $record) {
+                    //         $data['activity_id'] = $record->id;
+                    //         return ActivityDetail::create($data);
+                    //     })
 
-            ])
+                ])
             ->actions([
-                Tables\Actions\EditAction::make(),    // edit button
-                Tables\Actions\DeleteAction::make(),  // delete button
-            ])
+                    Tables\Actions\EditAction::make(),    // edit button
+                    Tables\Actions\DeleteAction::make(),  // delete button
+                ])
             ->defaultSort('id', 'desc');
     }
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
 {
-    return true;
+    return auth()->user()?->isStaff() ?? false;
 }
 
 
-    public function canCreate(): bool
-{
-    return true;
-}
 
-public function canEdit(Model $record): bool
-{
-    return true;
-}
+    // public function canCreate(): bool
+    // {
+    //     return true;
+    // }
 
-public function canDelete(Model $record): bool
-{
-    return true;
-}
+    // public function canEdit(Model $record): bool
+    // {
+    //     return true;
+    // }
+
+    // public function canDelete(Model $record): bool
+    // {
+    //     return true;
+    // }
 
 
 }
