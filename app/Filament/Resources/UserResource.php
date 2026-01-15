@@ -88,7 +88,8 @@ class UserResource extends Resource
                     ->circular()
                     ->height(50)
                     ->width(50)
-                    ->defaultImageUrl(url('/images/default-avatar.png')),
+                    // ->defaultImageUrl(url('/images/default-avatar.png'))
+                    ,
 
                 TextColumn::make('name')
                     ->label('الاسم')
