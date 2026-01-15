@@ -44,6 +44,14 @@ class Subscriber extends Model
         'follow_up_template_id',
         'active',
         'locked',
+        'join_date',
+        'group_id',
+        'stage_id',
+        'track_degree_id',
+        'user_id',
+        'follow_up_template_id',
+        'active',
+        'locked',
     ];
 
     public function user()
@@ -72,14 +80,14 @@ class Subscriber extends Model
 
 
 
-public function followUpTemplate(): BelongsTo
-{
-    return $this->belongsTo(FollowUpTemplate::class, 'follow_up_template_id');
-}
+    public function followUpTemplate(): BelongsTo
+    {
+        return $this->belongsTo(FollowUpTemplate::class, 'follow_up_template_id');
+    }
 
-public function followUpPeriods(): HasMany
-{
-    return $this->hasMany(FollowUpPeriod::class);
-}
+    public function followUpPeriods(): HasMany
+    {
+        return $this->hasMany(FollowUpPeriod::class);
+    }
 
 }

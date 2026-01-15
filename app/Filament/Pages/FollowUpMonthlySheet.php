@@ -49,6 +49,11 @@ class FollowUpMonthlySheet extends Page
         'monthly' => [],
     ];
 
+    public static function canAccess(): bool
+    {
+        return auth()->check() && auth()->user()->isStaff();
+    }
+
 
     public function prevDay(): void
     {
@@ -70,11 +75,11 @@ class FollowUpMonthlySheet extends Page
     /**
      * Critical: Users can only access if logged in & active
      */
-    public static function canAccess(): bool
-    {
-        $user = Auth::user();
-        return $user !== null && (int) $user->status === 1;
-    }
+    // public static function canAccess(): bool
+    // {
+    //     $user = Auth::user();
+    //     return $user !== null && (int) $user->status === 1;
+    // }
 
     public function mount(): void
     {

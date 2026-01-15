@@ -12,9 +12,9 @@ class User extends Authenticatable
 {
 
     public const ROLE_SUPER_ADMIN = 1;
-    public const ROLE_ADMIN = 2;
+    public const ROLE_MONITOR = 2;
     public const ROLE_SUPERVISOR = 3;
-    public const ROLE_MEMBER = 4;
+    public const ROLE_PARENT = 4;
 
     use HasFactory, Notifiable;
 

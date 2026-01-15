@@ -19,11 +19,11 @@ class DatabaseSeeder extends Seeder
 
             UserSeeder::class,
             GroupSeeder::class,
-            GroupUserSeeder::class,
+            // GroupUserSeeder::class,
             TrackDegreeSeeder::class,
             StageSeeder::class,
             StageTopicSeeder::class,
-            SubscriberSeeder::class,
+            // SubscriberSeeder::class,
         ]);
     }
 }

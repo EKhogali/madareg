@@ -48,10 +48,16 @@ class TopManagementMonthlyReport extends Page
     public array $topTemplates = [];
 
     public array $chartGender = ['labels' => [], 'data' => []];
-public array $chartGroups = ['labels' => [], 'data' => []];
-public array $chartStages = ['labels' => [], 'data' => []];
-public array $chartTracks = ['labels' => [], 'data' => []];
+    public array $chartGroups = ['labels' => [], 'data' => []];
+    public array $chartStages = ['labels' => [], 'data' => []];
+    public array $chartTracks = ['labels' => [], 'data' => []];
 
+
+
+    // public static function canAccess(): bool
+    // {
+    //     return auth()->check() && auth()->user()->isStaff();
+    // }
 
     public function getTitle(): string
     {
@@ -61,7 +67,7 @@ public array $chartTracks = ['labels' => [], 'data' => []];
     public static function canAccess(): bool
     {
         $user = Auth::user();
-        return $user && in_array((int) $user->role, [1, 2, 3], true); // staff only
+        return $user && in_array((int) $user->role, [1], true); // staff only
     }
 
     public function mount(): void
@@ -82,55 +88,56 @@ public array $chartTracks = ['labels' => [], 'data' => []];
                 ->columns(['default' => 1, 'md' => 6])
                 ->schema([
 
-                    Forms\Components\Select::make('groupId')
-                        ->label('المجموعة')
-                        ->preload()
-                        ->options(fn () => $this->groupOptions())
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
-                        ->searchable(),
+                        Forms\Components\Select::make('groupId')
+                            ->label('المجموعة')
+                            ->preload()
+                            ->options(fn() => $this->groupOptions())
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport())
+                            ->searchable(),
 
-                    Forms\Components\Select::make('templateId')
-                        ->label('نموذج المتابعة')
-                        ->preload()
-                        ->options(fn () => FollowUpTemplate::query()
-                            ->where('is_active', true)
-                            ->orderBy('name_ar')
-                            ->pluck('name_ar', 'id')
-                            ->toArray()
-                        )
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
-                        ->searchable(),
+                        Forms\Components\Select::make('templateId')
+                            ->label('نموذج المتابعة')
+                            ->preload()
+                            ->options(
+                                fn() => FollowUpTemplate::query()
+                                    ->where('is_active', true)
+                                    ->orderBy('name_ar')
+                                    ->pluck('name_ar', 'id')
+                                    ->toArray()
+                            )
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport())
+                            ->searchable(),
 
-                    Forms\Components\Select::make('stageId')
-                        ->label('المرحلة')
-                        ->preload()
-                        ->options(fn () => DB::table('stages')->orderBy('name')->pluck('name', 'id')->toArray())
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
-                        ->searchable(),
+                        Forms\Components\Select::make('stageId')
+                            ->label('المرحلة')
+                            ->preload()
+                            ->options(fn() => DB::table('stages')->orderBy('name')->pluck('name', 'id')->toArray())
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport())
+                            ->searchable(),
 
-                    Forms\Components\Select::make('trackDegreeId')
-                        ->label('المسار')
-                        ->preload()
-                        ->options(fn () => DB::table('track_degrees')->orderBy('title')->pluck('title', 'id')->toArray())
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
-                        ->searchable(),
+                        Forms\Components\Select::make('trackDegreeId')
+                            ->label('المسار')
+                            ->preload()
+                            ->options(fn() => DB::table('track_degrees')->orderBy('title')->pluck('title', 'id')->toArray())
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport())
+                            ->searchable(),
 
-                    Forms\Components\Select::make('month')
-                        ->label('الشهر')
-                        ->options($this->monthOptions())
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport()),
+                        Forms\Components\Select::make('month')
+                            ->label('الشهر')
+                            ->options($this->monthOptions())
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport()),
 
-                    Forms\Components\Select::make('year')
-                        ->label('السنة')
-                        ->options($this->yearOptions())
-                        ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport()),
-                ]),
+                        Forms\Components\Select::make('year')
+                            ->label('السنة')
+                            ->options($this->yearOptions())
+                            ->reactive()
+                            ->afterStateUpdated(fn() => $this->buildReport()),
+                    ]),
         ]);
     }
 
@@ -170,7 +177,7 @@ public array $chartTracks = ['labels' => [], 'data' => []];
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn ($y) => [$y => (string) $y])
+            ->mapWithKeys(fn($y) => [$y => (string) $y])
             ->toArray();
     }
 
@@ -236,96 +243,96 @@ public array $chartTracks = ['labels' => [], 'data' => []];
         $this->buildTopGroups($subscriberIds, $daysLimit, $weekLimit);
         $this->buildTopSubscribers($subscriberIds, $daysLimit, $weekLimit);
         $this->buildTopTemplates($subscriberIds, $daysLimit, $weekLimit);
-$this->buildDemographicsCharts($subscriberIds);
+        $this->buildDemographicsCharts($subscriberIds);
 
-        
+
     }
 
 
     protected function buildDemographicsCharts($subscriberIds): void
-{
-    // Gender: assumes 1=Male,2=Female
-    $genderRows = Subscriber::query()
-        ->select('gender', DB::raw('COUNT(*) as total'))
-        ->whereIn('id', $subscriberIds)
-        ->groupBy('gender')
-        ->get();
+    {
+        // Gender: assumes 1=Male,2=Female
+        $genderRows = Subscriber::query()
+            ->select('gender', DB::raw('COUNT(*) as total'))
+            ->whereIn('id', $subscriberIds)
+            ->groupBy('gender')
+            ->get();
 
-    $genderMap = [
-        1 => 'ذكور',
-        2 => 'إناث',
-        null => 'غير محدد',
-    ];
+        $genderMap = [
+            1 => 'ذكور',
+            2 => 'إناث',
+            null => 'غير محدد',
+        ];
 
-    $labels = [];
-    $data = [];
+        $labels = [];
+        $data = [];
 
-    foreach ($genderRows as $row) {
-        $labels[] = $genderMap[$row->gender] ?? 'غير محدد';
-        $data[] = (int) $row->total;
+        foreach ($genderRows as $row) {
+            $labels[] = $genderMap[$row->gender] ?? 'غير محدد';
+            $data[] = (int) $row->total;
+        }
+
+        $this->chartGender = ['labels' => $labels, 'data' => $data];
+
+        // Count per group
+        $groupRows = Subscriber::query()
+            ->select('group_id', DB::raw('COUNT(*) as total'))
+            ->whereIn('id', $subscriberIds)
+            ->groupBy('group_id')
+            ->get();
+
+        $groupNames = Group::query()
+            ->pluck('name', 'id')
+            ->toArray();
+
+        $labels = [];
+        $data = [];
+
+        foreach ($groupRows as $row) {
+            $labels[] = $row->group_id ? ($groupNames[$row->group_id] ?? 'غير معروف') : 'بدون مجموعة';
+            $data[] = (int) $row->total;
+        }
+
+        $this->chartGroups = ['labels' => $labels, 'data' => $data];
+
+        // Count per stage
+        $stageRows = Subscriber::query()
+            ->select('stage_id', DB::raw('COUNT(*) as total'))
+            ->whereIn('id', $subscriberIds)
+            ->groupBy('stage_id')
+            ->get();
+
+        $stageNames = DB::table('stages')->pluck('name', 'id')->toArray();
+
+        $labels = [];
+        $data = [];
+
+        foreach ($stageRows as $row) {
+            $labels[] = $row->stage_id ? ($stageNames[$row->stage_id] ?? 'غير معروف') : 'بدون مرحلة';
+            $data[] = (int) $row->total;
+        }
+
+        $this->chartStages = ['labels' => $labels, 'data' => $data];
+
+        // Count per track degree
+        $trackRows = Subscriber::query()
+            ->select('track_degree_id', DB::raw('COUNT(*) as total'))
+            ->whereIn('id', $subscriberIds)
+            ->groupBy('track_degree_id')
+            ->get();
+
+        $trackNames = DB::table('track_degrees')->pluck('title', 'id')->toArray();
+
+        $labels = [];
+        $data = [];
+
+        foreach ($trackRows as $row) {
+            $labels[] = $row->track_degree_id ? ($trackNames[$row->track_degree_id] ?? 'غير معروف') : 'بدون مسار';
+            $data[] = (int) $row->total;
+        }
+
+        $this->chartTracks = ['labels' => $labels, 'data' => $data];
     }
-
-    $this->chartGender = ['labels' => $labels, 'data' => $data];
-
-    // Count per group
-    $groupRows = Subscriber::query()
-        ->select('group_id', DB::raw('COUNT(*) as total'))
-        ->whereIn('id', $subscriberIds)
-        ->groupBy('group_id')
-        ->get();
-
-    $groupNames = Group::query()
-        ->pluck('name', 'id')
-        ->toArray();
-
-    $labels = [];
-    $data = [];
-
-    foreach ($groupRows as $row) {
-        $labels[] = $row->group_id ? ($groupNames[$row->group_id] ?? 'غير معروف') : 'بدون مجموعة';
-        $data[] = (int) $row->total;
-    }
-
-    $this->chartGroups = ['labels' => $labels, 'data' => $data];
-
-    // Count per stage
-    $stageRows = Subscriber::query()
-        ->select('stage_id', DB::raw('COUNT(*) as total'))
-        ->whereIn('id', $subscriberIds)
-        ->groupBy('stage_id')
-        ->get();
-
-    $stageNames = DB::table('stages')->pluck('name', 'id')->toArray();
-
-    $labels = [];
-    $data = [];
-
-    foreach ($stageRows as $row) {
-        $labels[] = $row->stage_id ? ($stageNames[$row->stage_id] ?? 'غير معروف') : 'بدون مرحلة';
-        $data[] = (int) $row->total;
-    }
-
-    $this->chartStages = ['labels' => $labels, 'data' => $data];
-
-    // Count per track degree
-    $trackRows = Subscriber::query()
-        ->select('track_degree_id', DB::raw('COUNT(*) as total'))
-        ->whereIn('id', $subscriberIds)
-        ->groupBy('track_degree_id')
-        ->get();
-
-    $trackNames = DB::table('track_degrees')->pluck('title', 'id')->toArray();
-
-    $labels = [];
-    $data = [];
-
-    foreach ($trackRows as $row) {
-        $labels[] = $row->track_degree_id ? ($trackNames[$row->track_degree_id] ?? 'غير معروف') : 'بدون مسار';
-        $data[] = (int) $row->total;
-    }
-
-    $this->chartTracks = ['labels' => $labels, 'data' => $data];
-}
 
 
     protected function resetResults(): void
@@ -345,9 +352,9 @@ $this->buildDemographicsCharts($subscriberIds);
         $this->topTemplates = [];
 
         $this->chartGender = ['labels' => [], 'data' => []];
-$this->chartGroups = ['labels' => [], 'data' => []];
-$this->chartStages = ['labels' => [], 'data' => []];
-$this->chartTracks = ['labels' => [], 'data' => []];
+        $this->chartGroups = ['labels' => [], 'data' => []];
+        $this->chartStages = ['labels' => [], 'data' => []];
+        $this->chartTracks = ['labels' => [], 'data' => []];
 
     }
 
@@ -448,7 +455,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
 
         foreach ($subs as $sub) {
             $period = $periodBySubscriber->get($sub->id);
-            if (!$period) continue;
+            if (!$period)
+                continue;
 
             $tplItems = $items->where('follow_up_template_id', $period->follow_up_template_id);
             $dailyCount = $tplItems->where('frequency', 1)->count();
@@ -456,7 +464,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             $monthlyCount = $tplItems->where('frequency', 3)->count();
 
             $expected = ($dailyCount * $daysLimit) + ($weeklyCount * $weekLimit) + $monthlyCount;
-            if ($expected <= 0) continue;
+            if ($expected <= 0)
+                continue;
 
             $done = DB::table('follow_up_entries')
                 ->where('follow_up_period_id', $period->id)
@@ -489,7 +498,7 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             ];
         }
 
-        usort($rows, fn ($a, $b) => $b['avg_total_pct'] <=> $a['avg_total_pct']);
+        usort($rows, fn($a, $b) => $b['avg_total_pct'] <=> $a['avg_total_pct']);
         $this->topGroups = array_slice($rows, 0, 10);
     }
 
@@ -518,7 +527,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
 
         foreach ($subs as $sub) {
             $period = $periods->get($sub->id);
-            if (!$period) continue;
+            if (!$period)
+                continue;
 
             $tplItems = $items->where('follow_up_template_id', $period->follow_up_template_id);
             $dailyCount = $tplItems->where('frequency', 1)->count();
@@ -526,7 +536,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             $monthlyCount = $tplItems->where('frequency', 3)->count();
 
             $expected = ($dailyCount * $daysLimit) + ($weeklyCount * $weekLimit) + $monthlyCount;
-            if ($expected <= 0) continue;
+            if ($expected <= 0)
+                continue;
 
             $done = DB::table('follow_up_entries')
                 ->where('follow_up_period_id', $period->id)
@@ -542,7 +553,7 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             ];
         }
 
-        usort($rows, fn ($a, $b) => $b['total_pct'] <=> $a['total_pct']);
+        usort($rows, fn($a, $b) => $b['total_pct'] <=> $a['total_pct']);
         $this->topSubscribers = array_slice($rows, 0, 10);
     }
 
@@ -571,7 +582,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
 
         foreach ($subs as $sub) {
             $period = $periods->get($sub->id);
-            if (!$period) continue;
+            if (!$period)
+                continue;
 
             $tplItems = $items->where('follow_up_template_id', $period->follow_up_template_id);
             $dailyCount = $tplItems->where('frequency', 1)->count();
@@ -579,7 +591,8 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             $monthlyCount = $tplItems->where('frequency', 3)->count();
 
             $expected = ($dailyCount * $daysLimit) + ($weeklyCount * $weekLimit) + $monthlyCount;
-            if ($expected <= 0) continue;
+            if ($expected <= 0)
+                continue;
 
             $done = DB::table('follow_up_entries')
                 ->where('follow_up_period_id', $period->id)
@@ -612,7 +625,7 @@ $this->chartTracks = ['labels' => [], 'data' => []];
             ];
         }
 
-        usort($rows, fn ($a, $b) => $b['avg_total_pct'] <=> $a['avg_total_pct']);
+        usort($rows, fn($a, $b) => $b['avg_total_pct'] <=> $a['avg_total_pct']);
         $this->topTemplates = array_slice($rows, 0, 10);
     }
 }

@@ -35,6 +35,12 @@ class MonthlyFollowUpReport extends Page
     /** Results */
     public array $reportRows = [];
 
+
+    public static function canAccess(): bool
+{
+    return auth()->check() && auth()->user()->isStaff();
+}
+ 
     public function getTitle(): string
     {
         return 'تقرير المتابعة الشهرية';

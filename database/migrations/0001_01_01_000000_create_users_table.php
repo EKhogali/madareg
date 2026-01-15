@@ -18,7 +18,7 @@ return new class extends Migration {
             $table->string('password');
 
             $table->unsignedTinyInteger('status')->default(1); // 1=Active, 2=Inactive
-            $table->unsignedTinyInteger('role')->default(4); // 1=Super-admin, 2=Admin, 3=Supervisor, 4=Member
+            $table->unsignedTinyInteger('role')->default(4); // 1=Super-admin, 2=Monitor, 3=Supervisor, 4=Parent
 
             $table->string('image')->nullable();
 

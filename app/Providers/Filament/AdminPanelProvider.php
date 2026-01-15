@@ -44,13 +44,16 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
-            ])
+    Pages\Dashboard::class,
+    \App\Filament\Pages\AppLauncher::class,
+])
+
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn() => new HtmlString('<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>')
             )
+            
             ->renderHook(
                 'panels::head.end',
                 fn() => view('filament.pwa-head')

@@ -12,20 +12,20 @@ class UserSeeder extends Seeder
     {
         // ✅ Super Admins
         User::updateOrCreate(
-            ['email' => 'a.hassi@gmail.com'],
+            ['email' => 'ahmed10xty@gmail.com'],
             [
-                'name' => 'Ahmed',
-                'password' => Hash::make('a@2025'),
+                'name' => 'احمد الحاسي',
+                'password' => Hash::make('a@2024Hassi!'),
                 'role' => User::ROLE_SUPER_ADMIN,
                 'status' => 1,
             ]
         );
 
         User::updateOrCreate(
-            ['email' => 'elmo@gmail.com'],
+            ['email' => 'elmothana.elmobarak@gmail.com'],
             [
-                'name' => 'Elmo Super Admin',
-                'password' => Hash::make('1'),
+                'name' => 'المثنى المبارك',
+                'password' => Hash::make('qD9[R+A&"[4A~~+x'),
                 'role' => User::ROLE_SUPER_ADMIN,
                 'status' => 1,
             ]
@@ -63,17 +63,17 @@ class UserSeeder extends Seeder
         }
 
         // ✅ Parents (Members) => 120
-        for ($i = 1; $i <= 120; $i++) {
-            User::updateOrCreate(
-                ['email' => "member{$i}@example.com"],
-                [
-                    'name' => "ولي أمر {$i}",
-                    'password' => Hash::make('password'),
-                    'role' => User::ROLE_MEMBER,
-                    'status' => 1,
-                ]
-            );
-        }
+        // for ($i = 1; $i <= 120; $i++) {
+        //     User::updateOrCreate(
+        //         ['email' => "member{$i}@example.com"],
+        //         [
+        //             'name' => "ولي أمر {$i}",
+        //             'password' => Hash::make('password'),
+        //             'role' => User::ROLE_MEMBER,
+        //             'status' => 1,
+        //         ]
+        //     );
+        // }
 
         $this->command->info('✅ Users seeded successfully (SuperAdmins + Supervisors + Parents).');
     }

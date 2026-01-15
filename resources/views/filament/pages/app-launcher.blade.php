@@ -1,160 +1,148 @@
+{{-- resources/views/filament/pages/app-launcher.blade.php --}}
+
 <x-filament-panels::page>
     @php
-        $user = auth()->user();
-        $isSupervisor = $user && (int) $user->role === 3;
+        // Brand colors (from your logo)
+        $brandBlue = '#053688';
+        $brandCyan = '#09B7DB';
+        $brandGold = '#D6A13A';
 
-        /**
-         * Build “apps” list.
-         * Put all items you currently have in sidebar:
-         * - Dashboard
-         * - Activities (resource)
-         * - Groups (resource)
-         * - Subscribers (resource)
-         * - Users (resource)
-         * - Follow up monthly sheet (page)
-         * - Monthly follow up report (page)
-         * - Top management report (page)
-         *
-         * If any route name differs in your project, adjust it here only.
-         */
+        // Safer dashboard URL (works even if route name differs)
+        $dashboardUrl = url('/admin');
+
         $apps = [
             [
                 'label' => 'لوحة التحكم',
                 'desc'  => 'نظرة عامة',
-                'route' => route('filament.admin.pages.dashboard'),
-                'icon'  => 'heroicon-o-home',
-                'bg'    => 'from-slate-700 to-slate-900',
+                'url'   => $dashboardUrl,
+                'icon'  => 'dashboard', // maps to x-app-icons.dashboard
+                'bg'    => "linear-gradient(135deg, {$brandBlue}, {$brandCyan})",
             ],
             [
                 'label' => 'الأنشطة',
                 'desc'  => 'إدارة الأنشطة',
-                'route' => route('filament.admin.resources.activities.index'),
-                'icon'  => 'heroicon-o-rectangle-stack',
-                'bg'    => 'from-orange-500 to-amber-600',
+                'url'   => route('filament.admin.resources.activities.index'),
+                'icon'  => 'activities',
+                'bg'    => "linear-gradient(135deg, {$brandCyan}, {$brandBlue})",
             ],
             [
                 'label' => 'المجموعات',
                 'desc'  => 'البيانات الأساسية',
-                'route' => route('filament.admin.resources.groups.index'),
-                'icon'  => 'heroicon-o-rectangle-group',
-                'bg'    => 'from-sky-500 to-blue-600',
+                'url'   => route('filament.admin.resources.groups.index'),
+                'icon'  => 'groups',
+                'bg'    => "linear-gradient(135deg, {$brandBlue}, #0f172a)",
             ],
             [
                 'label' => 'المشتركين',
                 'desc'  => 'البيانات الأساسية',
-                'route' => route('filament.admin.resources.subscribers.index'),
-                'icon'  => 'heroicon-o-users',
-                'bg'    => 'from-emerald-500 to-teal-600',
+                'url'   => route('filament.admin.resources.subscribers.index'),
+                'icon'  => 'subscribers',
+                'bg'    => "linear-gradient(135deg, {$brandGold}, #f59e0b)",
             ],
             [
                 'label' => 'المستخدمون',
                 'desc'  => 'إدارة النظام',
-                'route' => route('filament.admin.resources.users.index'),
-                'icon'  => 'heroicon-o-user-group',
-                'bg'    => 'from-violet-500 to-purple-700',
+                'url'   => route('filament.admin.resources.users.index'),
+                'icon'  => 'users',
+                'bg'    => "linear-gradient(135deg, #475569, #0f172a)",
             ],
             [
                 'label' => 'المتابعة الشهرية',
                 'desc'  => 'نموذج المتابعة',
-                'route' => route('filament.admin.pages.follow-up-monthly-sheet'),
-                'icon'  => 'heroicon-o-calendar-days',
-                'bg'    => 'from-cyan-500 to-sky-600',
+                'url'   => route('filament.admin.pages.follow-up-monthly-sheet'),
+                'icon'  => 'monthly_followup',
+                'bg'    => "linear-gradient(135deg, {$brandGold}, #b45309)",
             ],
             [
                 'label' => 'تقرير المتابعة الشهرية',
                 'desc'  => 'تقارير المتابعة',
-                'route' => route('filament.admin.pages.monthly-follow-up-report'),
-                'icon'  => 'heroicon-o-document-text',
-                'bg'    => 'from-fuchsia-500 to-pink-600',
+                'url'   => route('filament.admin.pages.monthly-follow-up-report'),
+                'icon'  => 'monthly_report',
+                'bg'    => "linear-gradient(135deg, #ec4899, #7c3aed)",
             ],
             [
                 'label' => 'تقرير الإدارة العليا',
                 'desc'  => 'لوحة مؤشرات',
-                'route' => \App\Filament\Pages\TopManagementMonthlyReport::getUrl(),
-                'icon'  => 'heroicon-o-chart-bar-square',
-                'bg'    => 'from-indigo-600 to-blue-800',
+                'url'   => \App\Filament\Pages\TopManagementMonthlyReport::getUrl(),
+                'icon'  => 'management_report',
+                'bg'    => "linear-gradient(135deg, {$brandBlue}, #1e3a8a)",
             ],
         ];
     @endphp
 
-    {{-- Header --}}
-    <div class="flex flex-col gap-2">
+    {{-- Center the whole launcher nicely --}}
+    <div class="min-h-[calc(100vh-12rem)] flex items-center justify-center">
+        <div class="w-full max-w-6xl">
 
-    </div>
-
-    {{-- Odoo-like background container --}}
-    <div class="mt-6 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div class="p-6 sm:p-8"
-             style="
-                background:
-                radial-gradient(1200px 600px at 80% 0%, rgba(255, 164, 0, .16), transparent 55%),
-                radial-gradient(1000px 600px at 20% 10%, rgba(0, 163, 255, .12), transparent 55%),
-                radial-gradient(900px 500px at 50% 100%, rgba(120, 60, 255, .10), transparent 60%);
-             "
-        >
-            {{-- Grid --}}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
-                @foreach ($apps as $app)
-                    <a href="{{ $app['route'] }}"
-                       class="
-                        group relative rounded-2xl
-                        border border-white/10 dark:border-white/10
-                        bg-white/60 dark:bg-gray-950/40
-                        backdrop-blur
-                        hover:bg-white/80 dark:hover:bg-gray-950/55
-                        transition
-                        shadow-sm hover:shadow-md
-                        p-4 sm:p-5
-                        flex flex-col items-center text-center
-                       "
-                    >
-                        {{-- Icon badge --}}
-                        <div class="
-                            w-14 h-14 sm:w-16 sm:h-16 rounded-2xl
-                            bg-gradient-to-br {{ $app['bg'] }}
-                            flex items-center justify-center
-                            shadow-sm
-                            ring-1 ring-white/20
-                            group-hover:scale-[1.03]
-                            transition
-                        ">
-                            @svg($app['icon'], 'w-8 h-8 text-white')
-                        </div>
-
-                        {{-- Label --}}
-                        <div class="mt-3 font-bold text-gray-900 dark:text-white text-sm sm:text-base">
-                            {{ $app['label'] }}
-                        </div>
-
-                        {{-- Desc --}}
-                        <div class="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                            {{ $app['desc'] }}
-                        </div>
-                    </a>
-                @endforeach
+            {{-- Header --}}
+            <div class="flex flex-col items-center text-center gap-2">
+                <div class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+                    التطبيقات
+                </div>
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                    اختر التطبيق المطلوب من القائمة أدناه
+                </div>
             </div>
 
-            {{-- Hint --}}
-            <div class="mt-6 text-xs text-gray-500 dark:text-gray-400">
-                ملاحظة: هذه الصفحة مصممة لتسهيل الوصول السريع مثل واجهة Odoo.
+            {{-- Odoo-like background --}}
+            <div class="mt-8 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                <div
+                    class="p-8 sm:p-10"
+                    style="
+                        background:
+                        radial-gradient(900px 500px at 70% 0%, rgba(9,183,219,.16), transparent 55%),
+                        radial-gradient(900px 500px at 30% 0%, rgba(214,161,58,.14), transparent 60%),
+                        linear-gradient(180deg, rgba(5,54,136,.06), transparent 60%);
+                    "
+                >
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-stretch">
+                        @foreach ($apps as $app)
+                            <a
+                                href="{{ $app['url'] }}"
+                                class="group rounded-2xl border border-gray-200/80 dark:border-gray-800/80
+                                       bg-white/70 dark:bg-gray-950/40 backdrop-blur
+                                       hover:bg-white dark:hover:bg-gray-950 transition
+                                       hover:shadow-xl hover:-translate-y-0.5 transform
+                                       p-6 flex items-center gap-4"
+                            >
+                                {{-- Icon badge --}}
+                                <div
+                                    class="shrink-0 w-14 h-14 rounded-2xl grid place-items-center shadow-md ring-1 ring-white/30"
+                                    style="background: {{ $app['bg'] }};"
+                                >
+                                    @php
+                                        // Map icon key to blade component tag: x-app-icons.{name}
+                                        $iconComponent = 'app-icons.' . $app['icon'];
+                                    @endphp
+
+                                    <x-dynamic-component :component="$iconComponent" class="w-7 h-7 text-white opacity-95" />
+                                </div>
+
+                                {{-- Text --}}
+                                <div class="min-w-0">
+                                    <div class="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                                        {{ $app['label'] }}
+                                    </div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
+                                        {{ $app['desc'] }}
+                                    </div>
+                                </div>
+
+                                {{-- Arrow --}}
+                                <div class="ms-auto text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
-
-    {{-- Optional: hide sidebar completely for non-supervisor (role != 3) --}}
-    @if (! $isSupervisor)
-        <style>
-            /* Filament sidebar wrapper selectors vary by version; these work for most v3/v4 layouts */
-            aside.fi-sidebar,
-            .fi-sidebar,
-            [data-testid="sidebar"] {
-                display: none !important;
-            }
-            /* Expand content full width */
-            main.fi-main,
-            .fi-main {
-                margin-inline-start: 0 !important;
-            }
-        </style>
-    @endif
 </x-filament-panels::page>
