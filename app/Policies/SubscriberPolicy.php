@@ -16,6 +16,8 @@ public function viewAny(User $user): bool
 }
 
 
+
+
     public function view(User $user, Subscriber $subscriber): bool
     {
         return true; //$user->isStaff() || $subscriber->user_id === $user->id;
