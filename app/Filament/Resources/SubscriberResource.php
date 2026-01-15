@@ -122,14 +122,14 @@ class SubscriberResource extends Resource
                                 Grid::make(2)->schema([
                                     TextInput::make('name')->label(__('name'))->required(),
 
-                                    Select::make('gender')
-                                        ->label('الجنس')
-                                        ->options([
-                                                'male' => 'ذكر',
-                                                'female' => 'أنثى',
-                                            ])
-                                        ->required()
-                                        ->native(false),
+                                    // Select::make('gender')
+                                    //     ->label('الجنس')
+                                    //     ->options([
+                                    //             'male' => 'ذكر',
+                                    //             'female' => 'أنثى',
+                                    //         ])
+                                    //     ->required()
+                                    //     ->native(false),
 
 
                                     Forms\Components\Select::make('follow_up_template_id')
@@ -368,10 +368,10 @@ class SubscriberResource extends Resource
                         ->searchable()
                         ->sortable(),
 
-                    Tables\Columns\TextColumn::make('gender')
-                        ->label('الجنس')
-                        ->formatStateUsing(fn($state) => $state === 'male' ? 'ذكر' : ($state === 'female' ? 'أنثى' : '-'))
-                        ->sortable(),
+                    // Tables\Columns\TextColumn::make('gender')
+                    //     ->label('الجنس')
+                    //     ->formatStateUsing(fn($state) => $state === 'male' ? 'ذكر' : ($state === 'female' ? 'أنثى' : '-'))
+                    //     ->sortable(),
 
 
                     TextColumn::make('birth_date')
