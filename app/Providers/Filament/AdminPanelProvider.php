@@ -38,7 +38,9 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#333333'),        // Dark text
             ])
             // ->homeUrl('/admin/app-launcher')
+            
             ->homeUrl(fn () => \App\Filament\Pages\AppLauncher::getUrl())
+
 
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

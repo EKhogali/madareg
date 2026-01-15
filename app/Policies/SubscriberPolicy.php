@@ -6,10 +6,15 @@ use App\Models\Subscriber;
 
 class SubscriberPolicy
 {
-    public function viewAny(User $user): bool
-    {
-        return $user->status === 1; // active
+public function viewAny(User $user): bool
+{
+    if ($user->isSuperAdmin()) {
+        return true;
     }
+
+    return (int) $user->status === 1 && $user->isStaff();
+}
+
 
     public function view(User $user, Subscriber $subscriber): bool
     {
