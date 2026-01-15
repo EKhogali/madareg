@@ -79,13 +79,13 @@ public function followUpPeriods(): HasMany
 
 
 public function isSuperAdmin(): bool { return $this->role === self::ROLE_SUPER_ADMIN; }
-public function isAdmin(): bool      { return $this->role === self::ROLE_ADMIN; }
+public function isAdmin(): bool      { return $this->role === self::ROLE_MONITOR; }
 public function isSupervisor(): bool { return $this->role === self::ROLE_SUPERVISOR; }
-public function isMember(): bool     { return $this->role === self::ROLE_MEMBER; }
+public function isMember(): bool     { return $this->role === self::ROLE_PARENT; }
 
 public function isStaff(): bool
 {
-    return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_ADMIN, self::ROLE_SUPERVISOR], true);
+    return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SUPERVISOR], true);
 }
 
 public function subscribers()
