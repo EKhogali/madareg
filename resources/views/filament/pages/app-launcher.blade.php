@@ -76,12 +76,7 @@
 
             {{-- Header --}}
             <div class="flex flex-col items-center text-center gap-2">
-                <div class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                    التطبيقات
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-300">
-                    اختر التطبيق المطلوب من القائمة أدناه
-                </div>
+
             </div>
 
             {{-- Odoo-like background --}}
