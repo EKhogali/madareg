@@ -8,11 +8,7 @@ class SubscriberPolicy
 {
 public function viewAny(User $user): bool
 {
-    if ($user->isSuperAdmin()) {
-        return true;
-    }
-
-    return (int) $user->status === 1 && $user->isStaff();
+    return true; // All users can view list of subscribers
 }
 
 

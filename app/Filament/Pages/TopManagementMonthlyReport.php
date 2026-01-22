@@ -12,9 +12,11 @@ use Filament\Forms;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Support\Traits\HasLauncherBackAction;
 
 class TopManagementMonthlyReport extends Page
 {
+    use HasLauncherBackAction;
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static ?string $navigationLabel = 'تقرير الإدارة العليا';
     protected static ?string $navigationGroup = 'المتابعة';
@@ -54,10 +56,13 @@ class TopManagementMonthlyReport extends Page
 
 
 
-    // public static function canAccess(): bool
-    // {
-    //     return auth()->check() && auth()->user()->isStaff();
-    // }
+protected function getHeaderActions(): array
+    {
+        return [
+            $this->getLauncherBackAction(),
+            ...parent::getHeaderActions(),
+        ];
+    }
 
     public function getTitle(): string
     {

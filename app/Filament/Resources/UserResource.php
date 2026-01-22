@@ -15,6 +15,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Filters\SelectFilter;
+use HasLauncherBackAction;
+
 
 class UserResource extends Resource
 {
@@ -24,13 +26,23 @@ class UserResource extends Resource
     protected static ?string $navigationLabel = 'المستخدمون';
     protected static ?string $pluralModelLabel = 'المستخدمون';
     protected static ?string $modelLabel = 'مستخدم';
-    
+
 
     //     protected static ?string $navigationLabel = 'المشتركين';
 // protected static ?string $pluralModelLabel = 'المشتركين';
 // protected static ?string $modelLabel = 'مشترك';
     protected static ?string $navigationGroup = 'إدارة النظام'; // Optional grouping
     // protected static int $navigationSort = 2; // Optional order
+
+
+    protected function getHeaderActions(): array
+{
+    return [
+        $this->getLauncherBackAction(),
+        // keep existing actions:
+        \Filament\Actions\CreateAction::make(),
+    ];
+}
 
     // ✅ FORM (Create / Edit)
     public static function form(Form $form): Form
@@ -39,12 +51,16 @@ class UserResource extends Resource
             Forms\Components\Section::make('بيانات المستخدم')
                 ->schema([
                     FileUpload::make('image')
-                        ->label('صورة المستخدم')
-                        ->image()
-                        ->directory('users')
-                        ->imagePreviewHeight('100')
-                        ->maxSize(1024)
-                        ->nullable(),
+    ->label('صورة المستخدم')
+    ->disk('public')                 // ✅ IMPORTANT
+    ->directory('users')
+    ->visibility('public')           // ✅ IMPORTANT
+    ->image()
+    ->imageEditor()
+    ->imagePreviewHeight('100')
+    ->maxSize(1024)
+    ->nullable(),
+
 
                     TextInput::make('name')
                         ->label('الاسم')
@@ -56,20 +72,38 @@ class UserResource extends Resource
                         ->unique(ignoreRecord: true)
                         ->required(),
 
+                    // TextInput::make('password')
+                    //     ->label('كلمة المرور')
+                    //     ->password()
+                    //     ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null)
+                    //     ->required(fn(string $context): bool => $context === 'create')
+                    //     ->revealable(),
+
+
                     TextInput::make('password')
                         ->label('كلمة المرور')
                         ->password()
-                        ->dehydrateStateUsing(fn($state) => filled($state) ? bcrypt($state) : null)
-                        ->required(fn(string $context): bool => $context === 'create')
-                        ->revealable(),
+                        ->revealable()
+                        ->dehydrated(fn($state) => filled($state))   // only save if typed
+                        ->required(fn(string $operation) => $operation === 'create')
+                        ->hidden(fn(string $operation) => $operation === 'edit')
+                        ->same('password_confirmation'),
+
+                    TextInput::make('password_confirmation')
+                        ->label('تأكيد كلمة المرور')
+                        ->password()
+                        ->revealable()
+                        ->dehydrated(false)
+                        ->required(fn(string $operation) => $operation === 'create')
+                        ->hidden(fn(string $operation) => $operation === 'edit'),
 
                     Select::make('role')
                         ->label('الدور')
                         ->options([
                             1 => 'مشرف عام (Super Admin)',
-                            2 => 'مدير (Admin)',
+                            2 => 'مراقب (Monitor)',
                             3 => 'مشرف (Supervisor)',
-                            4 => 'عضو (Member)',
+                            4 => 'والد (Parent)',
                         ])
                         ->default(4)
                         ->required(),
@@ -78,23 +112,32 @@ class UserResource extends Resource
         ]);
     }
 
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
+
+
     // ✅ TABLE (List View)
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                ImageColumn::make('image')
+
+
+                Tables\Columns\ImageColumn::make('image')
                     ->label('الصورة')
+                    ->disk('public')
                     ->circular()
-                    ->height(50)
-                    ->width(50)
-                    // ->defaultImageUrl(url('/images/default-avatar.png'))
-                    ,
+                    ->size(40)
+                    ->defaultImageUrl(asset('images/female.png')),
+
 
                 TextColumn::make('name')
                     ->label('الاسم')
                     ->sortable()
                     ->searchable(),
+
 
                 TextColumn::make('email')
                     ->label('البريد الإلكتروني')
@@ -106,9 +149,9 @@ class UserResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn($state) => match ($state) {
                         1 => 'Super Admin',
-                        2 => 'Admin',
+                        2 => 'Monitor',
                         3 => 'Supervisor',
-                        4 => 'Member',
+                        4 => 'Parent',
                         default => 'Unknown',
                     })
                     ->colors([
@@ -135,10 +178,18 @@ class UserResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn($record) => (int) $record->role !== User::ROLE_SUPER_ADMIN),
+
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn($record) => (int) $record->role !== User::ROLE_SUPER_ADMIN),
             ])
+
+            // ->actions([
+            //         Tables\Actions\ViewAction::make(),
+            //         Tables\Actions\EditAction::make(),
+            //         Tables\Actions\DeleteAction::make(),
+            //     ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);

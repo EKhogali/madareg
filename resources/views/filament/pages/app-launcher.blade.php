@@ -1,143 +1,100 @@
-{{-- resources/views/filament/pages/app-launcher.blade.php --}}
-
 <x-filament-panels::page>
-    @php
-        // Brand colors (from your logo)
-        $brandBlue = '#053688';
-        $brandCyan = '#09B7DB';
-        $brandGold = '#D6A13A';
+    <div class="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-8 text-center">
+           
+        </div>
 
-        // Safer dashboard URL (works even if route name differs)
-        $dashboardUrl = url('/admin');
+        @php
+            $u = auth()->user();
 
-        $apps = [
-            [
-                'label' => 'لوحة التحكم',
-                'desc'  => 'نظرة عامة',
-                'url'   => $dashboardUrl,
-                'icon'  => 'dashboard', // maps to x-app-icons.dashboard
-                'bg'    => "linear-gradient(135deg, {$brandBlue}, {$brandCyan})",
-            ],
-            [
-                'label' => 'الأنشطة',
-                'desc'  => 'إدارة الأنشطة',
-                'url'   => route('filament.admin.resources.activities.index'),
-                'icon'  => 'activities',
-                'bg'    => "linear-gradient(135deg, {$brandCyan}, {$brandBlue})",
-            ],
-            [
-                'label' => 'المجموعات',
-                'desc'  => 'البيانات الأساسية',
-                'url'   => route('filament.admin.resources.groups.index'),
-                'icon'  => 'groups',
-                'bg'    => "linear-gradient(135deg, {$brandBlue}, #0f172a)",
-            ],
-            [
-                'label' => 'المشتركين',
-                'desc'  => 'البيانات الأساسية',
-                'url'   => route('filament.admin.resources.subscribers.index'),
-                'icon'  => 'subscribers',
-                'bg'    => "linear-gradient(135deg, {$brandGold}, #f59e0b)",
-            ],
-            [
-                'label' => 'المستخدمون',
-                'desc'  => 'إدارة النظام',
-                'url'   => route('filament.admin.resources.users.index'),
-                'icon'  => 'users',
-                'bg'    => "linear-gradient(135deg, #475569, #0f172a)",
-            ],
-            [
-                'label' => 'المتابعة الشهرية',
-                'desc'  => 'نموذج المتابعة',
-                'url'   => route('filament.admin.pages.follow-up-monthly-sheet'),
-                'icon'  => 'monthly_followup',
-                'bg'    => "linear-gradient(135deg, {$brandGold}, #b45309)",
-            ],
-            [
-                'label' => 'تقرير المتابعة الشهرية',
-                'desc'  => 'تقارير المتابعة',
-                'url'   => route('filament.admin.pages.monthly-follow-up-report'),
-                'icon'  => 'monthly_report',
-                'bg'    => "linear-gradient(135deg, #ec4899, #7c3aed)",
-            ],
-            [
-                'label' => 'تقرير الإدارة العليا',
-                'desc'  => 'لوحة مؤشرات',
-                'url'   => \App\Filament\Pages\TopManagementMonthlyReport::getUrl(),
-                'icon'  => 'management_report',
-                'bg'    => "linear-gradient(135deg, {$brandBlue}, #1e3a8a)",
-            ],
-        ];
-    @endphp
+            $tiles = [
+                [
+                    'title' => 'المشتركين',
+                    'subtitle' => 'البيانات الأساسية',
+                    'icon' => asset('images/launcher/subscribers.png'),
+                    'url' => \App\Filament\Resources\SubscriberResource::getUrl(),
+                    'can' => true,
+                ],
+                [
+                    'title' => 'أولياء الأمور',
+                    'subtitle' => 'إضافة وتعديل',
+                    'icon' => asset('images/launcher/parents.png'),
+                    'url' => \App\Filament\Resources\ParentResource::getUrl(),
+                    'can' => true,
+                ],
+                [
+                    'title' => 'المتابعة الشهرية',
+                    'subtitle' => 'نموذج المتابعة',
+                    'icon' => asset('images/launcher/followup.png'),
+                    'url' => \App\Filament\Pages\FollowUpMonthlySheet::getUrl(),
+                    'can' => true,
+                ],
+                [
+                    'title' => 'تقرير المتابعة الشهرية',
+                    'subtitle' => 'تقارير المتابعة',
+                    'icon' => asset('images/launcher/report.png'),
+                    'url' => \App\Filament\Pages\MonthlyFollowUpReport::getUrl(),
+                    'can' => true,
+                ],
 
-    {{-- Center the whole launcher nicely --}}
-    <div class="min-h-[calc(100vh-12rem)] flex items-center justify-center">
-        <div class="w-full max-w-6xl">
+                // Super admin only tiles:
+                [
+                    'title' => 'الأنشطة',
+                    'subtitle' => 'إدارة الأنشطة',
+                    'icon' => asset('images/launcher/activities.png'),
+                    'url' => \App\Filament\Resources\ActivityResource::getUrl(),
+                    'can' => $u?->isSuperAdmin(),
+                ],
+                [
+                    'title' => 'المجموعات',
+                    'subtitle' => 'البيانات الأساسية',
+                    'icon' => asset('images/launcher/groups.png'),
+                    'url' => \App\Filament\Resources\GroupResource::getUrl(),
+                    'can' => $u?->isSuperAdmin(),
+                ],
+                [
+                    'title' => 'المستخدمون',
+                    'subtitle' => 'إدارة النظام',
+                    'icon' => asset('images/launcher/users.png'),
+                    'url' => \App\Filament\Resources\UserResource::getUrl(),
+                    'can' => $u?->isSuperAdmin(),
+                ],
+                [
+                    'title' => 'تقرير الإدارة العليا',
+                    'subtitle' => 'لوحة مؤشرات',
+                    'icon' => asset('images/launcher/top-report.png'),
+                    'url' => \App\Filament\Pages\TopManagementMonthlyReport::getUrl(),
+                    'can' => $u?->isSuperAdmin(),
+                ],
+            ];
+        @endphp
 
-            {{-- Header --}}
-            <div class="flex flex-col items-center text-center gap-2">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 place-items-center">
+            @foreach ($tiles as $tile)
+                @continue(!($tile['can'] ?? false))
 
-            </div>
+                <a href="{{ $tile['url'] }}"
+                   class="group w-full max-w-[200px] aspect-square rounded-3xl border border-gray-200 bg-white p-5
+                          shadow-sm transition hover:shadow-lg hover:-translate-y-0.5
+                          focus:outline-none focus:ring-2 focus:ring-primary-500">
 
-            {{-- Odoo-like background --}}
-            <div class="mt-8 rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-                <div
-                    class="p-8 sm:p-10"
-                    style="
-                        background:
-                        radial-gradient(900px 500px at 70% 0%, rgba(9,183,219,.16), transparent 55%),
-                        radial-gradient(900px 500px at 30% 0%, rgba(214,161,58,.14), transparent 60%),
-                        linear-gradient(180deg, rgba(5,54,136,.06), transparent 60%);
-                    "
-                >
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 place-items-stretch">
-                        @foreach ($apps as $app)
-                            <a
-                                href="{{ $app['url'] }}"
-                                class="group rounded-2xl border border-gray-200/80 dark:border-gray-800/80
-                                       bg-white/70 dark:bg-gray-950/40 backdrop-blur
-                                       hover:bg-white dark:hover:bg-gray-950 transition
-                                       hover:shadow-xl hover:-translate-y-0.5 transform
-                                       p-6 flex items-center gap-4"
-                            >
-                                {{-- Icon badge --}}
-                                <div
-                                    class="shrink-0 w-14 h-14 rounded-2xl grid place-items-center shadow-md ring-1 ring-white/30"
-                                    style="background: {{ $app['bg'] }};"
-                                >
-                                    @php
-                                        // Map icon key to blade component tag: x-app-icons.{name}
-                                        $iconComponent = 'app-icons.' . $app['icon'];
-                                    @endphp
+                    <div class="h-full flex flex-col items-center justify-center text-center gap-3">
+                        <div class="h-16 w-16 rounded-2xl bg-gray-50 ring-1 ring-gray-200 flex items-center justify-center overflow-hidden">
+                            <img src="{{ $tile['icon'] }}"
+                                 alt=""
+                                 class="h-10 w-10 object-contain"
+                                 onerror="this.remove(); this.parentElement.innerHTML='📌'; this.parentElement.classList.add('text-2xl');" />
+                        </div>
 
-                                    <x-dynamic-component :component="$iconComponent" class="w-7 h-7 text-white opacity-95" />
-                                </div>
+                        <div>
+                            <div class="text-base font-semibold text-gray-900">{{ $tile['title'] }}</div>
+                            <div class="mt-1 text-xs text-gray-500">{{ $tile['subtitle'] }}</div>
+                        </div>
 
-                                {{-- Text --}}
-                                <div class="min-w-0">
-                                    <div class="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                                        {{ $app['label'] }}
-                                    </div>
-                                    <div class="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
-                                        {{ $app['desc'] }}
-                                    </div>
-                                </div>
-
-                                {{-- Arrow --}}
-                                <div class="ms-auto text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M9 18l6-6-6-6"/>
-                                    </svg>
-                                </div>
-                            </a>
-                        @endforeach
+                        <div class="text-gray-300 group-hover:text-gray-600 transition text-xl">›</div>
                     </div>
-
-                    <div class="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
-                    </div>
-                </div>
-            </div>
-
+                </a>
+            @endforeach
         </div>
     </div>
 </x-filament-panels::page>

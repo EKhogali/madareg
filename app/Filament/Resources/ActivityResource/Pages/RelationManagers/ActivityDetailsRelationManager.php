@@ -21,6 +21,8 @@ class ActivityDetailsRelationManager extends RelationManager
     protected static string $relationship = 'details';
     protected static ?string $title = "المشتركون في النشاط";
 
+
+    
     public function form(Form $form): Form
     {
         return $form->schema([
@@ -76,9 +78,10 @@ class ActivityDetailsRelationManager extends RelationManager
             ->defaultSort('id', 'desc');
     }
 
-    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+
+public static function canViewForRecord($ownerRecord, string $pageClass): bool
 {
-    return auth()->user()?->isStaff() ?? false;
+    return auth()->user()?->isSuperAdmin() ?? false;
 }
 
 

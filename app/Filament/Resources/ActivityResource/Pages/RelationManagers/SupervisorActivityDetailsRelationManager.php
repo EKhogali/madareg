@@ -14,6 +14,10 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
 {
     protected static string $relationship = 'supervisorActivityDetails';
     protected static ?string $title = 'مشرفي النشاط';
+public static function canViewForRecord($ownerRecord, string $pageClass): bool
+{
+    return auth()->user()?->isSuperAdmin() ?? false;
+}
 
     public function table(Tables\Table $table): Tables\Table
     {

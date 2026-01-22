@@ -138,18 +138,23 @@ class GroupResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
+public static function getEloquentQuery(): Builder
+{
+    $query = parent::getEloquentQuery();
+    $user = auth()->user();
 
-        if (auth()->user()->role === 3) {
-            $query->whereHas('users', function ($q) {
-                $q->where('users.id', auth()->id());
-            });
-        }
-
-        return $query;
+    if (! $user) {
+        return $query->whereRaw('1=0');
     }
+
+    // Supervisor: only groups assigned to them
+    if ($user->isSupervisor()) {
+        $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id));
+    }
+
+    return $query;
+}
+
 
 
     public static function shouldRegisterNavigation(): bool

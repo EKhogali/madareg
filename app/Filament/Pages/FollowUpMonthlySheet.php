@@ -11,9 +11,11 @@ use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+use App\Support\Traits\HasLauncherBackAction;
 
 class FollowUpMonthlySheet extends Page
 {
+    use HasLauncherBackAction;
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationLabel = 'المتابعة الشهرية';
     protected static ?string $navigationGroup = 'المتابعة';
@@ -729,5 +731,13 @@ class FollowUpMonthlySheet extends Page
         }
 
         return $this->period->is_month_locked || $this->period->isWeekLocked($this->mobileWeekIndex);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            $this->getLauncherBackAction(),
+            ...parent::getHeaderActions(),
+        ];
     }
 }

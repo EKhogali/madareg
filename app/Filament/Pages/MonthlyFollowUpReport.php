@@ -13,9 +13,11 @@ use Filament\Forms;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Support\Traits\HasLauncherBackAction;
 
 class MonthlyFollowUpReport extends Page
 {
+    use HasLauncherBackAction;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'تقرير المتابعة الشهرية';
     protected static ?string $navigationGroup = 'المتابعة';
@@ -129,7 +131,7 @@ class MonthlyFollowUpReport extends Page
         }
 
         // Parent (role 4): optional return groups of their subscribers only
-        if (Auth::user()?->role === User::ROLE_MEMBER) {
+        if (Auth::user()?->role === User::ROLE_PARENT) {
             $groupIds = Subscriber::query()
                 ->where('user_id', Auth::id())
                 ->whereNotNull('group_id')
@@ -347,5 +349,11 @@ class MonthlyFollowUpReport extends Page
         usort($this->reportRows, fn ($a, $b) => $b['total'] <=> $a['total']);
     }
 
-    
+    protected function getHeaderActions(): array
+    {
+        return [
+            $this->getLauncherBackAction(),
+            ...parent::getHeaderActions(),
+        ];
+    }
 }

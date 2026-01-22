@@ -28,7 +28,7 @@ class GroupMembersRelationManager extends RelationManager
             // Select existing user or create new one
             Select::make('user_id')
                 ->label('العضو')
-                ->options(User::where('role', User::ROLE_MEMBER)->pluck('name', 'id'))
+                ->options(User::where('role', User::ROLE_PARENT)->pluck('name', 'id'))
                 ->searchable()
                 ->preload()
                 ->createOptionForm([

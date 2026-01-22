@@ -21,11 +21,31 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
 
+use Filament\Navigation\MenuItem;
+
+use App\Filament\Pages\MyProfile;
+use App\Filament\Pages\ChangePassword;
+
+use Filament\Support\Facades\FilamentView;
+
+
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn() => new HtmlString(auth()->user()?->isSuperAdmin() ? '' : '
+        <style>
+            /* Hide sidebar + collapse layout spacing */
+            .fi-sidebar { display: none !important; }
+            .fi-main { margin-inline-start: 0 !important; }
+            .fi-topbar { left: 0 !important; }
+        </style>
+    ')
+        );
+
         return $panel
             ->default()
             ->id('admin')
@@ -38,29 +58,42 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#333333'),        // Dark text
             ])
             // ->homeUrl('/admin/app-launcher')
-            
-            ->homeUrl(fn () => \App\Filament\Pages\AppLauncher::getUrl())
+
+            ->homeUrl(fn() => \App\Filament\Pages\AppLauncher::getUrl())
+            ->userMenuItems([
+                'my-profile' => MenuItem::make()
+                    ->label('ملفي الشخصي')
+                    ->url(fn() => MyProfile::getUrl())
+                    ->icon('heroicon-o-user'),
+
+                'change-password' => MenuItem::make()
+                    ->label('تغيير كلمة المرور')
+                    ->url(fn() => ChangePassword::getUrl())
+                    ->icon('heroicon-o-key'),
+            ])
 
 
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
+            ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-    Pages\Dashboard::class,
-    \App\Filament\Pages\AppLauncher::class,
-])
+                Pages\Dashboard::class,
+                \App\Filament\Pages\AppLauncher::class,
+            ])
 
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn() => new HtmlString('<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>')
             )
-            
+
             ->renderHook(
                 'panels::head.end',
                 fn() => view('filament.pwa-head')
             )
             ->brandName('مدارج النور')
+
             ->widgets([
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
@@ -75,10 +108,14 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                \App\Http\Middleware\OnlySuperAdminCanUsePanel::class,
             ])
 
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+
+
+        ;
     }
 }

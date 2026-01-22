@@ -40,6 +40,7 @@ public function boot(): void
 protected $policies = [
     Subscriber::class => \App\Policies\SubscriberPolicy::class,
     FollowUpPeriod::class => \App\Policies\FollowUpPeriodPolicy::class,
+    User::class => \App\Policies\UserPolicy::class,
 ];
 
 

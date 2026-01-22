@@ -31,30 +31,47 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // ✅ Supervisors list
+        // ✅ Add: مديرة المشرفات (as Super Admin)
+        User::updateOrCreate(
+            ['email' => 'noramahmod201589@gmail.com'],
+            [
+                'name' => 'نورة',
+                'password' => Hash::make('password'),
+                'role' => User::ROLE_SUPER_ADMIN,
+                'status' => 1,
+            ]
+        );
+
+        // ✅ Real Supervisors (from provided data)
         $supervisors = [
-            'ضيبه',
-            'بشرى عبد القادر',
-            'أسماء',
-            'مريم',
-            'شهد إدريس',
-            'وفاء',
-            'مسرة',
-            'صفاء',
-            'بشرى الشريف',
-            'زكى',
-            'شفاء',
-            'ريحانة',
-            'عائدة',
-            'سهى',
-            'أحمد'
+            ['name' => 'صفية',            'email' => 'safia.abdo352@gmail.com'],
+            ['name' => 'بشرى عبد القادر', 'email' => 'bushraabdalkader4@gmail.com'],
+            ['name' => 'أسماء',           'email' => 'asmaabdalqader26@gmial.com'], // keep as provided
+            ['name' => 'مريم',            'email' => 'marymabdalhamed2004@gmail.com'],
+            ['name' => 'شهد إدريس',       'email' => 'Shahadidres32@gmail.com'],
+            ['name' => 'كاميليا',         'email' => 'Zahratalkamilyaaffan@gmail.com'],
+            ['name' => 'وفاء',            'email' => 'wafa.de94@gmail.com'],
+            ['name' => 'مسرة',            'email' => 'Massarawahdy@gmail.com'],
+            ['name' => 'رتال',            'email' => 'ritalidres4@gmail.com'],
+            ['name' => 'صفاء',            'email' => 'safasalem.vo@gmail.com'],
+            ['name' => 'بشرى الشويرف',    'email' => 'Bshwerif@gmail.com'],
+
+            ['name' => 'رؤى',             'email' => 'rouashahrani05@gmail.com'],
+            ['name' => 'فاطمة',           'email' => 'falslymany806@gmail.com'],
+            ['name' => 'ريحانة',          'email' => 'riyhanaab9@gmail.com'],
+
+            ['name' => 'غادة',            'email' => 'dodeezzdin@gmail.com'],
+            ['name' => 'شفاء',            'email' => 'Shefaabdelbasit223@gmail.com'],
+            ['name' => 'سهية',            'email' => 'sohaia2003@icloud.com'],
+
+            ['name' => 'أحمد',            'email' => 'ahmed.supervisor@gmail.com'],
         ];
 
-        foreach ($supervisors as $index => $name) {
+        foreach ($supervisors as $s) {
             User::updateOrCreate(
-                ['email' => 'supervisor' . ($index + 1) . '@example.com'],
+                ['email' => $s['email']],
                 [
-                    'name' => $name,
+                    'name' => $s['name'],
                     'password' => Hash::make('password'),
                     'role' => User::ROLE_SUPERVISOR,
                     'status' => 1,
@@ -62,19 +79,5 @@ class UserSeeder extends Seeder
             );
         }
 
-        // ✅ Parents (Members) => 120
-        // for ($i = 1; $i <= 120; $i++) {
-        //     User::updateOrCreate(
-        //         ['email' => "member{$i}@example.com"],
-        //         [
-        //             'name' => "ولي أمر {$i}",
-        //             'password' => Hash::make('password'),
-        //             'role' => User::ROLE_MEMBER,
-        //             'status' => 1,
-        //         ]
-        //     );
-        // }
-
-        $this->command->info('✅ Users seeded successfully (SuperAdmins + Supervisors + Parents).');
     }
 }
