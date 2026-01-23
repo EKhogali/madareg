@@ -38,7 +38,16 @@ class OnlySuperAdminCanUsePanel
         '/admin/app-launcher',
         '/admin/my-profile',
         '/admin/change-password',
+    '/admin/parents',
+    '/admin/subscribers',
+    '/admin/follow-up-monthly-sheet',
+    '/admin/monthly-follow-up-report',
     ];
+
+
+    if ((int) $user->role === User::ROLE_SUPER_ADMIN) {
+    return $next($request);
+}
 
     foreach ($allowedPrefixes as $prefix) {
         if (str_starts_with($path, $prefix)) {
