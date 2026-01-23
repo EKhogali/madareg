@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\ImageColumn;
 
+
 class GroupSupervisorsRelationManager extends RelationManager
 {
     protected static string $relationship = 'supervisors';
@@ -81,8 +82,18 @@ class GroupSupervisorsRelationManager extends RelationManager
                 TextColumn::make('email')->label('البريد الإلكتروني'),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()->label('إضافة عضو'),
+                // Tables\Actions\CreateAction::make()->label('إضافة مشرف'),
+                Tables\Actions\AttachAction::make()
+                    ->label('إضافة مشرف')
+                    ->recordTitleAttribute('name')
+                    ->preloadRecordSelect()
+                    ->recordSelectSearchColumns(['name', 'email'])
+                    ->recordSelectOptionsQuery(
+                        fn(Builder $query) =>
+                        $query->where('role', \App\Models\User::ROLE_SUPERVISOR)
+                    ),
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()->label('حذف'),

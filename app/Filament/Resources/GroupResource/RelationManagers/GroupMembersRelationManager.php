@@ -16,6 +16,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 
 class GroupMembersRelationManager extends RelationManager
 {
@@ -102,7 +103,35 @@ class GroupMembersRelationManager extends RelationManager
                 TextColumn::make('subscriber.birth_date')->label('تاريخ الميلاد')->date(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()->label('إضافة عضو'),
+
+
+                Tables\Actions\AttachAction::make()
+                    ->label('إضافة مشترك')
+                    ->form([
+                        Select::make('subscriber_id')
+                            ->label('Subscriber')
+                            ->searchable()
+                            ->preload()
+                            ->options(
+                                fn() => Subscriber::query()
+                                    // optional: show only active subscribers
+                                    ->where('active', true)
+
+                                    // optional: show only subscribers not already in this group
+                                    ->where(function ($q) {
+                                        $groupId = $this->getOwnerRecord()->id;
+                                        $q->whereNull('group_id')->orWhere('group_id', '!=', $groupId);
+                                    })
+
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                            )
+                            ->required(),
+                    ])
+                    ->action(function (array $data): void {
+                        Subscriber::whereKey($data['subscriber_id'])
+                            ->update(['group_id' => $this->getOwnerRecord()->id]);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

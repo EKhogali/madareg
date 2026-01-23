@@ -124,7 +124,7 @@ class GroupResource extends Resource
     {
         return [
             GroupSupervisorsRelationManager::class,
-            GroupMembersRelationManager::class,
+            // GroupMembersRelationManager::class,
         ];
     }
 
