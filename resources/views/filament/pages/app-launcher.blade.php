@@ -5,7 +5,6 @@
         </div>
 
         @php
-        dd(auth()->user());
             $u = auth()->user();
 
             $tiles = [

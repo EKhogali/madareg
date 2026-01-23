@@ -52,13 +52,16 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+  protected function casts(): array
+{
+    return [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'role' => 'integer',
+        'status' => 'integer',
+    ];
+}
+
 
     public function groups()
     {
@@ -80,10 +83,13 @@ public function followUpPeriods(): HasMany
 
 
 
-public function isSuperAdmin(): bool { return $this->role === self::ROLE_SUPER_ADMIN; }
-public function isAdmin(): bool      { return $this->role === self::ROLE_MONITOR; }
-public function isSupervisor(): bool { return $this->role === self::ROLE_SUPERVISOR; }
-public function isMember(): bool     { return $this->role === self::ROLE_PARENT; }
+public function isSuperAdmin(): bool { return (int) $this->role === self::ROLE_SUPER_ADMIN; }
+public function isAdmin(): bool      { return (int) $this->role === self::ROLE_MONITOR; }
+public function isSupervisor(): bool { return (int) $this->role === self::ROLE_SUPERVISOR; }
+public function isMember(): bool     { return (int) $this->role === self::ROLE_PARENT; }
+
+
+
 
 public function isStaff(): bool
 {
