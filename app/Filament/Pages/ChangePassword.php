@@ -42,7 +42,7 @@ class ChangePassword extends Page
                             ->password()
                             ->revealable()
                             ->required()
-                            ->rule(Password::min(8))
+                            // ->rule(Password::min(8))
                             ->same('password_confirmation'),
 
                         Forms\Components\TextInput::make('password_confirmation')

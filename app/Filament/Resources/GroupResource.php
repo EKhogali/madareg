@@ -62,9 +62,9 @@ class GroupResource extends Resource
                             ->label(__('Active'))
                             ->default(true),
 
-                        ColorPicker::make('color')
-                            ->label(__('Color'))
-                            ->default('#FFFFFF'),
+                        // ColorPicker::make('color')
+                        //     ->label(__('Color'))
+                        //     ->default('#FFFFFF'),
                     ])
                     ->columns(2),
             ]);
@@ -98,8 +98,8 @@ class GroupResource extends Resource
                     ])
                     ->formatStateUsing(fn($state) => $state ? __('Yes') : __('No')),
 
-                TextColumn::make('color')
-                    ->label(__('Color')),
+                // TextColumn::make('color')
+                //     ->label(__('Color')),
             ])
             ->filters([
                 SelectFilter::make('active')
@@ -138,48 +138,48 @@ class GroupResource extends Resource
         ];
     }
 
-public static function getEloquentQuery(): Builder
-{
-    $query = parent::getEloquentQuery();
-    $user = auth()->user();
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
 
-    if (! $user) {
-        return $query->whereRaw('1=0');
+        if (!$user) {
+            return $query->whereRaw('1=0');
+        }
+
+        // Supervisor: only groups assigned to them
+        if ($user->isSupervisor()) {
+            $query->whereHas('users', fn($q) => $q->where('users.id', $user->id));
+        }
+
+        return $query;
     }
-
-    // Supervisor: only groups assigned to them
-    if ($user->isSupervisor()) {
-        $query->whereHas('users', fn ($q) => $q->where('users.id', $user->id));
-    }
-
-    return $query;
-}
 
 
 
     public static function shouldRegisterNavigation(): bool
-{
-    return auth()->user()?->isSuperAdmin() ?? false;
-}
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
 
-public static function canViewAny(): bool
-{
-    return auth()->user()?->isSuperAdmin() ?? false;
-}
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
 
-public static function canCreate(): bool
-{
-    return auth()->user()?->isSuperAdmin() ?? false;
-}
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
 
-public static function canEdit($record): bool
-{
-    return auth()->user()?->isSuperAdmin() ?? false;
-}
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
 
-public static function canDelete($record): bool
-{
-    return auth()->user()?->isSuperAdmin() ?? false;
-}
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
+    }
 
 }
