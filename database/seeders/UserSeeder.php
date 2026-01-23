@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
             ['email' => 'elmothana.elmobarak@gmail.com'],
             [
                 'name' => 'المثنى المبارك',
-                'password' => Hash::make('MD2025!!'),
+                'password' => Hash::make('MD#2026!!'),
                 'role' => User::ROLE_SUPER_ADMIN,
                 'status' => 1,
             ]

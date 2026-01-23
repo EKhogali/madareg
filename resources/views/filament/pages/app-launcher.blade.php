@@ -17,7 +17,7 @@
                 ],
                 [
                     'title' => 'أولياء الأمور',
-                    'subtitle' => 'إضافة وتعديل',
+                    'subtitle' => 'البيانات الأساسية',
                     'icon' => asset('images/launcher/parents.png'),
                     'url' => \App\Filament\Resources\ParentResource::getUrl(),
                     'can' => true,
@@ -30,7 +30,7 @@
                     'can' => true,
                 ],
 
-                
+
                 [
                     'title' => 'تقرير المتابعة الشهرية',
                     'subtitle' => 'تقارير المتابعة',
