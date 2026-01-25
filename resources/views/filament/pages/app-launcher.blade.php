@@ -1,7 +1,13 @@
 <x-filament-panels::page>
-    <div class="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="mb-8 text-center">
-           
+    <div class="mx-auto w-full max-w-7xl">
+        {{-- Welcome Header --}}
+        <div class="mb-10 flex flex-col items-center text-center">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-950 dark:text-white sm:text-4xl">
+                أهلاً بك، {{ auth()->user()->name }} 👋
+            </h1>
+            <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
+                اختر الوجهة التي ترغب في الانتقال إليها اليوم
+            </p>
         </div>
 
         @php
@@ -10,93 +16,109 @@
             $tiles = [
                 [
                     'title' => 'المشتركين',
-                    'subtitle' => 'البيانات الأساسية',
-                    'icon' => asset('images/launcher/subscribers.png'),
+                    'subtitle' => 'إدارة بيانات المشتركين',
+                    'icon' => 'heroicon-o-user-group',
+                    'color' => 'primary',
                     'url' => \App\Filament\Resources\SubscriberResource::getUrl(),
                     'can' => true,
                 ],
                 [
                     'title' => 'أولياء الأمور',
-                    'subtitle' => 'البيانات الأساسية',
-                    'icon' => asset('images/launcher/parents.png'),
+                    'subtitle' => 'بيانات التواصل والعائلة',
+                    'icon' => 'heroicon-o-identification',
+                    'color' => 'info',
                     'url' => \App\Filament\Resources\ParentResource::getUrl(),
                     'can' => true,
                 ],
                 [
                     'title' => 'المتابعة الشهرية',
-                    'subtitle' => 'نموذج المتابعة',
-                    'icon' => asset('images/launcher/followup.png'),
+                    'subtitle' => 'إدخال بيانات المتابعة',
+                    'icon' => 'heroicon-o-clipboard-document-check',
+                    'color' => 'success',
                     'url' => \App\Filament\Pages\FollowUpMonthlySheet::getUrl(),
                     'can' => true,
                 ],
-
-
                 [
-                    'title' => 'تقرير المتابعة الشهرية',
-                    'subtitle' => 'تقارير المتابعة',
-                    'icon' => asset('images/launcher/report.png'),
+                    'title' => 'تقارير المتابعة',
+                    'subtitle' => 'عرض وتحليل النتائج',
+                    'icon' => 'heroicon-o-chart-bar-square',
+                    'color' => 'warning',
                     'url' => \App\Filament\Pages\MonthlyFollowUpReport::getUrl(),
                     'can' => true,
                 ],
-
-                // Super admin only tiles:
                 [
                     'title' => 'الأنشطة',
-                    'subtitle' => 'إدارة الأنشطة',
-                    'icon' => asset('images/launcher/activities.png'),
+                    'subtitle' => 'البرامج والفعاليات',
+                    'icon' => 'heroicon-o-sparkles',
+                    'color' => 'danger',
                     'url' => \App\Filament\Resources\ActivityResource::getUrl(),
                     'can' => $u?->isSuperAdmin(),
                 ],
                 [
                     'title' => 'المجموعات',
-                    'subtitle' => 'البيانات الأساسية',
-                    'icon' => asset('images/launcher/groups.png'),
+                    'subtitle' => 'تنظيم وتوزيع الفئات',
+                    'icon' => 'heroicon-o-rectangle-group',
+                    'color' => 'gray',
                     'url' => \App\Filament\Resources\GroupResource::getUrl(),
                     'can' => $u?->isSuperAdmin(),
                 ],
                 [
                     'title' => 'المستخدمون',
-                    'subtitle' => 'إدارة النظام',
-                    'icon' => asset('images/launcher/users.png'),
+                    'subtitle' => 'إدارة صلاحيات النظام',
+                    'icon' => 'heroicon-o-shield-check',
+                    'color' => 'primary',
                     'url' => \App\Filament\Resources\UserResource::getUrl(),
                     'can' => $u?->isSuperAdmin(),
                 ],
                 [
-                    'title' => 'تقرير الإدارة العليا',
-                    'subtitle' => 'لوحة مؤشرات',
-                    'icon' => asset('images/launcher/top-report.png'),
+                    'title' => 'الإدارة العليا',
+                    'subtitle' => 'لوحة مؤشرات الأداء',
+                    'icon' => 'heroicon-o-presentation-chart-line',
+                    'color' => 'success',
                     'url' => \App\Filament\Pages\TopManagementMonthlyReport::getUrl(),
                     'can' => $u?->isSuperAdmin(),
                 ],
             ];
         @endphp
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 place-items-center">
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ($tiles as $tile)
                 @continue(!($tile['can'] ?? false))
 
                 <a href="{{ $tile['url'] }}"
-                   class="group w-full max-w-[200px] aspect-square rounded-3xl border border-gray-200 bg-white p-5
-                          shadow-sm transition hover:shadow-lg hover:-translate-y-0.5
-                          focus:outline-none focus:ring-2 focus:ring-primary-500">
+                   class="group relative flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-950/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-primary-500/50 dark:bg-gray-900 dark:ring-white/10 dark:hover:ring-primary-400/50">
+                    
+                    {{-- Decorative Background Glow --}}
+                    <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-{{ $tile['color'] }}-500/5 transition-all group-hover:bg-{{ $tile['color'] }}-500/10"></div>
 
-                    <div class="h-full flex flex-col items-center justify-center text-center gap-3">
-                        <div class="h-16 w-16 rounded-2xl bg-gray-50 ring-1 ring-gray-200 flex items-center justify-center overflow-hidden">
-                            <img src="{{ $tile['icon'] }}"
-                                 alt=""
-                                 class="h-10 w-10 object-contain"
-                                 onerror="this.remove(); this.parentElement.innerHTML='📌'; this.parentElement.classList.add('text-2xl');" />
-                        </div>
+                    {{-- Icon Container --}}
+                    <div class="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-{{ $tile['color'] }}-50 text-{{ $tile['color'] }}-600 ring-1 ring-{{ $tile['color'] }}-200 transition-colors group-hover:bg-{{ $tile['color'] }}-600 group-hover:text-white dark:bg-{{ $tile['color'] }}-500/10 dark:ring-{{ $tile['color'] }}-400/20">
+                        @svg($tile['icon'], 'h-8 w-8')
+                    </div>
 
-                        <div>
-                            <div class="text-base font-semibold text-gray-900">{{ $tile['title'] }}</div>
-                            <div class="mt-1 text-xs text-gray-500">{{ $tile['subtitle'] }}</div>
-                        </div>
+                    {{-- Text --}}
+                    <div class="text-center">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                            {{ $tile['title'] }}
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            {{ $tile['subtitle'] }}
+                        </p>
+                    </div>
 
-                        <div class="text-gray-300 group-hover:text-gray-600 transition text-xl">›</div>
+                    {{-- Subtle Arrow Indicator --}}
+                    <div class="mt-4 flex translate-y-4 opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                        <span class="text-{{ $tile['color'] }}-600 dark:text-{{ $tile['color'] }}-400 text-sm font-medium">دخول الآن ←</span>
                     </div>
                 </a>
             @endforeach
         </div>
     </div>
+
+    <style>
+        /* Essential styles for dynamic color classes if not purged by Tailwind */
+        .bg-primary-50 { background-color: rgba(var(--primary-50), 1); }
+        .text-primary-600 { color: rgba(var(--primary-600), 1); }
+        .bg-primary-600 { background-color: rgba(var(--primary-600), 1); }
+    </style>
 </x-filament-panels::page>

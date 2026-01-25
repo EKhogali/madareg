@@ -60,6 +60,7 @@ class AdminPanelProvider extends PanelProvider
             // ->homeUrl('/admin/app-launcher')
 
             ->homeUrl(fn() => \App\Filament\Pages\AppLauncher::getUrl())
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->userMenuItems([
                 'my-profile' => MenuItem::make()
                     ->label('ملفي الشخصي')
