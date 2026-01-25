@@ -52,8 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#333333'),
             ])
             ->homeUrl(fn() => \App\Filament\Pages\AppLauncher::getUrl())
-            ->logoutRedirectUrl(fn() => route('filament.admin.auth.login'))
-            
+
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->when(
                 file_exists(public_path('build/manifest.json')),
