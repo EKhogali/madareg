@@ -71,6 +71,7 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-key'),
             ])
 
+            
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
             ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
