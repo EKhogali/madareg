@@ -52,6 +52,8 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::hex('#333333'),
             ])
             ->homeUrl(fn() => \App\Filament\Pages\AppLauncher::getUrl())
+            ->logoutRedirectUrl(fn() => route('filament.admin.auth.login'))
+            
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->when(
                 file_exists(public_path('build/manifest.json')),
@@ -71,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-key'),
             ])
 
-            
+
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
             ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
