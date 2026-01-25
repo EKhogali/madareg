@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
             ['email' => 'noramahmod201589@gmail.com'],
             [
                 'name' => 'نورة',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('nmd#2024'),
                 'role' => User::ROLE_SUPER_ADMIN,
                 'status' => 1,
             ]
@@ -46,7 +46,7 @@ class UserSeeder extends Seeder
         $supervisors = [
             ['name' => 'صفية',            'email' => 'safia.abdo352@gmail.com'],
             ['name' => 'بشرى عبد القادر', 'email' => 'bushraabdalkader4@gmail.com'],
-            ['name' => 'أسماء',           'email' => 'asmaabdalqader26@gmial.com'], // keep as provided
+            ['name' => 'أسماء',           'email' => 'asmaabdalqader26@gmail.com'], 
             ['name' => 'مريم',            'email' => 'marymabdalhamed2004@gmail.com'],
             ['name' => 'شهد إدريس',       'email' => 'Shahadidres32@gmail.com'],
             ['name' => 'كاميليا',         'email' => 'Zahratalkamilyaaffan@gmail.com'],

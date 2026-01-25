@@ -19,6 +19,8 @@ return new class extends Migration {
 
             $table->unsignedTinyInteger('status')->default(1); // 1=Active, 2=Inactive
             $table->unsignedTinyInteger('role')->default(4); // 1=Super-admin, 2=Monitor, 3=Supervisor, 4=Parent
+            // 1) super-admin can do/see anything 2)supervisor can add/edit subscriber/parents and follow-up monthly sheet and report 
+            // 3)monitor can add/edit activities (master and details) 4) parent only can see report and edit his/here subscribers (subscriber.user_id) monthly sheet
 
             $table->string('image')->nullable();
 
@@ -52,3 +54,6 @@ return new class extends Migration {
         Schema::dropIfExists('sessions');
     }
 };
+
+
+// php artisan code:export    

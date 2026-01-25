@@ -103,26 +103,15 @@ public static function canEdit($record): bool
 
     public static function getEloquentQuery(): Builder
 {
-    $query = parent::getEloquentQuery()->where('role', User::ROLE_PARENT);
+    $query = parent::getEloquentQuery()->where('role', 4); // Only show Parent role
     $user = auth()->user();
 
-    if (! $user) {
-        return $query->whereRaw('1=0');
-    }
-
-    // Super admin sees all parents
-    if ($user->isSuperAdmin()) {
+    // 1. Super-Admin (1) & Supervisor (3): Can see and add/edit all parents
+    if ($user->isSuperAdmin() || $user->isSupervisor()) {
         return $query;
     }
 
-    // Supervisor sees only parents that have subscribers in their groups
-    if ($user->isSupervisor()) {
-        $groupIds = $user->groups()->pluck('groups.id')->toArray();
-
-        return $query->whereHas('subscribers', fn ($q) => $q->whereIn('group_id', $groupIds));
-    }
-
-    // others see nothing
+    // Others: Cannot see parent list
     return $query->whereRaw('1=0');
 }
 

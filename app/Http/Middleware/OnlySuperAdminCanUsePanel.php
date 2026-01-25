@@ -12,42 +12,40 @@ class OnlySuperAdminCanUsePanel
     public function handle(Request $request, Closure $next): \Symfony\Component\HttpFoundation\Response
 {
     $user = $request->user();
-    $path = '/' . ltrim($request->path(), '/'); // e.g. /admin/...
-
-    // Let Filament handle guests (login page etc.)
+    
     if (! $user) {
         return $next($request);
     }
 
-    // Super admin can access everything
-    if ((int) $user->role === \App\Models\User::ROLE_SUPER_ADMIN) {
-        return $next($request);
-    }
+    // 1. Get the current path (e.g., 'admin' or 'admin/subscribers')
+    $path = $request->path();
 
-    // ALWAYS allow Filament internal endpoints needed for the panel to function
-    if (
-        str_starts_with($path, '/admin/livewire') ||
-        str_starts_with($path, '/admin/filament') ||
-        str_starts_with($path, '/admin/logout')
-    ) {
-        return $next($request);
-    }
+    // Always redirect the panel root ( /admin ) to the App Launcher for ALL users
+if ($path === 'admin' || $path === 'admin/') {
+    return redirect()->to('/admin/app-launcher');
+}
 
-    // Allow ONLY the launcher + profile pages for non-superadmins
-    $allowedPrefixes = [
-        '/admin/app-launcher',
-        '/admin/my-profile',
-        '/admin/change-password',
-    '/admin/parents',
-    '/admin/subscribers',
-    '/admin/follow-up-monthly-sheet',
-    '/admin/monthly-follow-up-report',
-    ];
-
-
-    if ((int) $user->role === User::ROLE_SUPER_ADMIN) {
+// Super Admin (and user id 2) can still access everything else
+if ($user->id === 2 || (int) $user->role === 1) {
     return $next($request);
 }
+
+
+    // 4. Always allow internal Filament/Livewire requests
+    if (str_contains($path, 'livewire') || str_contains($path, 'filament')) {
+        return $next($request);
+    }
+
+    // 5. Define allowed paths for non-admins
+    $allowedPrefixes = [
+        'admin/app-launcher',
+        'admin/my-profile',
+        'admin/change-password',
+        'admin/subscribers',
+        'admin/parents',
+        'admin/follow-up-monthly-sheet',
+        'admin/monthly-follow-up-report',
+    ];
 
     foreach ($allowedPrefixes as $prefix) {
         if (str_starts_with($path, $prefix)) {
@@ -55,8 +53,8 @@ class OnlySuperAdminCanUsePanel
         }
     }
 
-    // Redirect everything else to launcher
-    return redirect('/admin/app-launcher');
+    // 6. If they try to access anything else, send them to the launcher
+    return redirect()->to('/admin/app-launcher');
 }
 
 }

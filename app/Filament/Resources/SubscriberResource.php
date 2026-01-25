@@ -564,23 +564,30 @@ class SubscriberResource extends Resource
 
 
 
-    public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery();
-        $user = auth()->user();
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+{
+    $query = parent::getEloquentQuery();
+    $user = auth()->user();
 
-        if (!$user) {
-            return $query->whereRaw('1=0');
-        }
+    // 1. Super-Admin (1): Sees everything
+    if ($user->isSuperAdmin()) return $query;
 
-        // Supervisor sees only subscribers in their groups (by group_id)
-        if ((int) $user->role === 3) {
-            $groupIds = $user->groups()->pluck('groups.id')->toArray();
-            $query->whereIn('group_id', $groupIds);
-        }
-
-        return $query;
+    // 2. Supervisor (3): Sees only subscribers in their assigned groups
+    if ($user->isSupervisor()) {
+        $groupIds = $user->groups()->pluck('groups.id')->toArray();
+        return $query->whereIn('group_id', $groupIds);
     }
+
+    // 3. Parent (4): Sees only their own children
+    if ($user->role === 4) {
+        return $query->where('user_id', $user->id);
+    }
+
+    // 4. Monitor (2): Can see all for activity tracking
+    if ($user->role === 2) return $query;
+
+    return $query->whereRaw('1=0');
+}
 
 
     public static function shouldRegisterNavigation(): bool
