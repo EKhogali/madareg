@@ -41,10 +41,11 @@ class MonthlyFollowUpReport extends Page
 
 
     public static function canAccess(): bool
-{
-    return auth()->check() && auth()->user()->isStaff();
-}
- 
+    {
+        $user = auth()->user();
+        return $user && in_array((int) $user->role, [1, 3, 4], true);
+    }
+
     public function getTitle(): string
     {
         return 'تقرير المتابعة الشهرية';
@@ -71,38 +72,38 @@ class MonthlyFollowUpReport extends Page
                     Forms\Components\Select::make('groupId')
                         ->label('المجموعة')
                         ->preload()
-                        ->options(fn () => $this->groupOptions())
+                        ->options(fn() => $this->groupOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
+                        ->afterStateUpdated(fn() => $this->buildReport())
                         ->searchable(),
 
                     Forms\Components\Select::make('subscriberId')
                         ->label('المشترك')
                         ->preload()
-                        ->options(fn () => $this->subscriberOptions())
+                        ->options(fn() => $this->subscriberOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
+                        ->afterStateUpdated(fn() => $this->buildReport())
                         ->searchable(),
 
                     Forms\Components\Select::make('templateId')
                         ->label('نموذج المتابعة')
                         ->preload()
-                        ->options(fn () => $this->templateOptions())
+                        ->options(fn() => $this->templateOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport())
+                        ->afterStateUpdated(fn() => $this->buildReport())
                         ->searchable(),
 
                     Forms\Components\Select::make('month')
                         ->label('الشهر')
                         ->options($this->monthOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport()),
+                        ->afterStateUpdated(fn() => $this->buildReport()),
 
                     Forms\Components\Select::make('year')
                         ->label('السنة')
                         ->options($this->yearOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn () => $this->buildReport()),
+                        ->afterStateUpdated(fn() => $this->buildReport()),
 
                     /** ✅ KPI selector */
                     Forms\Components\CheckboxList::make('selectedKpis')
@@ -214,7 +215,7 @@ class MonthlyFollowUpReport extends Page
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn ($y) => [$y => (string) $y])
+            ->mapWithKeys(fn($y) => [$y => (string) $y])
             ->toArray();
     }
 
@@ -257,7 +258,8 @@ class MonthlyFollowUpReport extends Page
 
         foreach ($subscribers as $subscriber) {
 
-            if (!$subscriber->follow_up_template_id) continue;
+            if (!$subscriber->follow_up_template_id)
+                continue;
 
             $period = FollowUpPeriod::query()
                 ->where('subscriber_id', $subscriber->id)
@@ -346,7 +348,7 @@ class MonthlyFollowUpReport extends Page
         }
 
         // ✅ Ranking by total
-        usort($this->reportRows, fn ($a, $b) => $b['total'] <=> $a['total']);
+        usort($this->reportRows, fn($a, $b) => $b['total'] <=> $a['total']);
     }
 
     protected function getHeaderActions(): array

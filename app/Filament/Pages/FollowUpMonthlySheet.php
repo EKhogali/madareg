@@ -51,10 +51,11 @@ class FollowUpMonthlySheet extends Page
         'monthly' => [],
     ];
 
-    
+
     public static function canAccess(): bool
     {
-        return auth()->check() && auth()->user()->isStaff();
+        $user = auth()->user();
+        return $user && in_array((int) $user->role, [1, 3, 4], true); // SuperAdmin, Supervisor, Parent
     }
 
 
@@ -117,47 +118,47 @@ class FollowUpMonthlySheet extends Page
     {
         return $form
             ->schema([
-                    Forms\Components\Grid::make()
-                        ->columns([
-                                'default' => 1,
-                                'md' => 3,
-                            ])
-                        ->schema([
-                                Forms\Components\Select::make('subscriberId')
-                                    ->label('المشترك')
-                                    ->preload()
-                                    ->options(
-                                        fn() => Subscriber::query()
-                                            ->where('user_id', Auth::id())
-                                            ->orderBy('name')
-                                            ->pluck('name', 'id')
-                                            ->toArray()
-                                    )
-                                    ->required()
-                                    ->reactive()
-                                    ->afterStateUpdated(function () {
-                                        $this->loadPeriodAndItems();
-                                    }),
+                Forms\Components\Grid::make()
+                    ->columns([
+                        'default' => 1,
+                        'md' => 3,
+                    ])
+                    ->schema([
+                        Forms\Components\Select::make('subscriberId')
+                            ->label('المشترك')
+                            ->preload()
+                            ->options(
+                                fn() => Subscriber::query()
+                                    ->where('user_id', Auth::id())
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->toArray()
+                            )
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function () {
+                                $this->loadPeriodAndItems();
+                            }),
 
-                                Forms\Components\Select::make('month')
-                                    ->label('الشهر')
-                                    ->options($this->monthOptions())
-                                    ->required()
-                                    ->reactive()
-                                    ->afterStateUpdated(function () {
-                                        $this->loadPeriodAndItems();
-                                    }),
+                        Forms\Components\Select::make('month')
+                            ->label('الشهر')
+                            ->options($this->monthOptions())
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function () {
+                                $this->loadPeriodAndItems();
+                            }),
 
-                                Forms\Components\Select::make('year')
-                                    ->label('السنة')
-                                    ->options($this->yearOptions())
-                                    ->required()
-                                    ->reactive()
-                                    ->afterStateUpdated(function () {
-                                        $this->loadPeriodAndItems();
-                                    }),
-                            ]),
-                ]);
+                        Forms\Components\Select::make('year')
+                            ->label('السنة')
+                            ->options($this->yearOptions())
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function () {
+                                $this->loadPeriodAndItems();
+                            }),
+                    ]),
+            ]);
     }
 
     public function monthOptions(): array
