@@ -17,33 +17,27 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
-
 use Filament\Navigation\MenuItem;
-
 use App\Filament\Pages\MyProfile;
 use App\Filament\Pages\ChangePassword;
-
 use Filament\Support\Facades\FilamentView;
-
-
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        // ✅ Sidebar Logic: Only User ID 2 sees the sidebar
         FilamentView::registerRenderHook(
             'panels::head.end',
-            fn() => new HtmlString(auth()->user()?->isSuperAdmin() ? '' : '
-        <style>
-            /* Hide sidebar + collapse layout spacing */
-            .fi-sidebar { display: none !important; }
-            .fi-main { margin-inline-start: 0 !important; }
-            .fi-topbar { left: 0 !important; }
-        </style>
-    ')
+            fn() => new HtmlString(auth()->id() === 2 ? '' : '
+                <style>
+                    .fi-sidebar { display: none !important; }
+                    .fi-main { margin-inline-start: 0 !important; }
+                    .fi-topbar { left: 0 !important; }
+                </style>
+            ')
         );
 
         return $panel
@@ -52,15 +46,15 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::hex('#F4A623'),        // Warm orange
-                'accent' => Color::hex('#0076BF'),        // Light blue
-                'danger' => Color::hex('#D4881F'),        // Bronze / warning
-                'gray' => Color::hex('#333333'),        // Dark text
+                'primary' => Color::hex('#F4A623'),
+                'accent' => Color::hex('#0076BF'),
+                'danger' => Color::hex('#D4881F'),
+                'gray' => Color::hex('#333333'),
             ])
-            // ->homeUrl('/admin/app-launcher')
-
             ->homeUrl(fn() => \App\Filament\Pages\AppLauncher::getUrl())
             ->viteTheme('resources/css/filament/admin/theme.css')
+            
+            // ✅ Clean User Menu (No Switcher Logic)
             ->userMenuItems([
                 'my-profile' => MenuItem::make()
                     ->label('ملفي الشخصي')
@@ -73,7 +67,6 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-key'),
             ])
 
-
             ->brandLogo(asset('images/madarej-alnoor.jpg'))
             ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -82,23 +75,16 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 \App\Filament\Pages\AppLauncher::class,
             ])
-
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn() => new HtmlString('<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>')
             )
-
             ->renderHook(
                 'panels::head.end',
                 fn() => view('filament.pwa-head')
             )
             ->brandName('مدارج النور')
-
-            ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -111,12 +97,8 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
                 \App\Http\Middleware\OnlySuperAdminCanUsePanel::class,
             ])
-
             ->authMiddleware([
                 Authenticate::class,
-            ])
-
-
-        ;
+            ]);
     }
 }

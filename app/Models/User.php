@@ -42,6 +42,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function canImpersonate(): bool
+    {
+        // Only you (ID 2) can impersonate others
+        return $this->id === 2;
+    }
+
+    /**
+     * Define who can be impersonated.
+     */
+    public function canBeImpersonated(): bool
+    {
+        // Prevent anyone from impersonating Super Admins for safety
+        return (int) $this->role !== self::ROLE_SUPER_ADMIN;
+    }
+
     public function subscriber()
     {
         return $this->hasOne(Subscriber::class);

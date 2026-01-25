@@ -22,11 +22,12 @@ class AppLauncher extends Page
     }
 
     // ✅ Sidebar/menu item appears ONLY for user_id 1/2
-    public static function shouldRegisterNavigation(): bool
-    {
-        $id = Auth::id();
-        return in_array($id, [1, 2], true);
-    }
+public static function shouldRegisterNavigation(): bool
+{
+    // Only register this in the sidebar menu for IDs 1 and 2
+    return in_array(auth()->id(), [1, 2], true);
+}
+    
 
 
     public static function canAccess(): bool

@@ -36,13 +36,13 @@ class UserResource extends Resource
 
 
     protected function getHeaderActions(): array
-{
-    return [
-        $this->getLauncherBackAction(),
-        // keep existing actions:
-        \Filament\Actions\CreateAction::make(),
-    ];
-}
+    {
+        return [
+            $this->getLauncherBackAction(),
+            // keep existing actions:
+            \Filament\Actions\CreateAction::make(),
+        ];
+    }
 
     // ✅ FORM (Create / Edit)
     public static function form(Form $form): Form
@@ -50,16 +50,18 @@ class UserResource extends Resource
         return $form->schema([
             Forms\Components\Section::make('بيانات المستخدم')
                 ->schema([
+
+
                     FileUpload::make('image')
-    ->label('صورة المستخدم')
-    ->disk('public')                 // ✅ IMPORTANT
-    ->directory('users')
-    ->visibility('public')           // ✅ IMPORTANT
-    ->image()
-    ->imageEditor()
-    ->imagePreviewHeight('100')
-    ->maxSize(1024)
-    ->nullable(),
+                        ->label('صورة المستخدم')
+                        ->disk('public')                 // ✅ IMPORTANT
+                        ->directory('users')
+                        ->visibility('public')           // ✅ IMPORTANT
+                        ->image()
+                        ->imageEditor()
+                        ->imagePreviewHeight('100')
+                        ->maxSize(1024)
+                        ->nullable(),
 
 
                     TextInput::make('name')
@@ -125,6 +127,7 @@ class UserResource extends Resource
             ->columns([
 
 
+
                 Tables\Columns\ImageColumn::make('image')
                     ->label('الصورة')
                     ->disk('public')
@@ -183,6 +186,7 @@ class UserResource extends Resource
 
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn($record) => (int) $record->role !== User::ROLE_SUPER_ADMIN),
+
             ])
 
             // ->actions([
