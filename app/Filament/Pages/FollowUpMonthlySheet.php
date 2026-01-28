@@ -642,6 +642,18 @@ class FollowUpMonthlySheet extends Page
      */
     public function toggleLock(string $scope, ?int $index = null, bool $locked = true): void
     {
+        $user = auth()->user();
+
+        // ✅ Only Super Admin + Supervisor can lock/unlock
+        if (!$user || (!$user->isSuperAdmin() && !$user->isSupervisor())) {
+            Notification::make()
+                ->title('ليس لديك صلاحية القفل/الفتح')
+                ->danger()
+                ->send();
+
+            return;
+        }
+        
         if (!$this->period)
             return;
 
