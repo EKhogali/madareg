@@ -20,7 +20,7 @@
                     'icon' => 'heroicon-o-user-group',
                     'color' => 'primary',
                     'url' => \App\Filament\Resources\SubscriberResource::getUrl(),
-                    'can' => true,
+                    'can' => $u?->isStaff(),
                 ],
                 [
                     'title' => 'أولياء الأمور',
@@ -28,7 +28,7 @@
                     'icon' => 'heroicon-o-identification',
                     'color' => 'info',
                     'url' => \App\Filament\Resources\ParentResource::getUrl(),
-                    'can' => true,
+                    'can' => $u?->isStaff(),
                 ],
                 [
                     'title' => 'المتابعة الشهرية',
