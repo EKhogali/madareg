@@ -50,6 +50,12 @@ class OnlySuperAdminCanUsePanel
             'admin/auth',
         ];
 
+        // ✅ Allow Supervisors into these resources
+        if ((int) $user->role === 3) { // supervisor
+            $allowedPrefixes[] = 'admin/parents';
+            $allowedPrefixes[] = 'admin/subscribers';
+        }
+
         foreach ($allowedPrefixes as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 return $next($request);
