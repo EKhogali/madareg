@@ -91,7 +91,7 @@ class SubscriberResource extends Resource
 
                                     DatePicker::make('join_date')
                                         ->label(__('تاريخ الانضمام'))
-                                        ->minDate('2024-01-01'),
+                                        ->minDate('2022-01-01'),
 
                                 ]),
                             ])
