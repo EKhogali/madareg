@@ -10,12 +10,14 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use App\Support\Traits\HasLauncherBackAction;
 
 class FollowUpMonthlySheet extends Page
 {
     use HasLauncherBackAction;
+
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationLabel = 'المتابعة الشهرية';
     protected static ?string $navigationGroup = 'المتابعة';
@@ -28,7 +30,7 @@ class FollowUpMonthlySheet extends Page
     public int $year;
     public int $month;
 
-    /** Mobile (kept, even if disabled in UI) */
+    /** Mobile */
     public int $mobileDay = 1;
     public int $mobileWeek = 1;
 
@@ -51,24 +53,10 @@ class FollowUpMonthlySheet extends Page
         'monthly' => [],
     ];
 
-
     public static function canAccess(): bool
     {
         $user = auth()->user();
         return $user && in_array((int) $user->role, [1, 3, 4], true); // SuperAdmin, Supervisor, Parent
-    }
-
-
-    public function prevDay(): void
-    {
-        $this->mobileDay = max(1, $this->mobileDay - 1);
-        $this->clampMobileControls();
-    }
-
-    public function nextDay(): void
-    {
-        $this->mobileDay = min($this->daysInMonth(), $this->mobileDay + 1);
-        $this->clampMobileControls();
     }
 
     public function getTitle(): string
@@ -77,13 +65,43 @@ class FollowUpMonthlySheet extends Page
     }
 
     /**
-     * Critical: Users can only access if logged in & active
+     * ✅ Central policy:
+     * - Super Admin: all subscribers
+     * - Supervisor: only subscribers in assigned groups
+     * - Parent: only subscribers where subscriber.user_id = auth user
      */
-    // public static function canAccess(): bool
-    // {
-    //     $user = Auth::user();
-    //     return $user !== null && (int) $user->status === 1;
-    // }
+    protected function subscribersForUser(): Builder
+    {
+        $u = Auth::user();
+        $q = Subscriber::query();
+
+        if (!$u) {
+            return $q->whereRaw('1=0');
+        }
+
+        // Parent: only own subscribers
+        if ((int) $u->role === 4) {
+            return $q->where('user_id', $u->id);
+        }
+
+        // Supervisor: only group subscribers
+        if ((int) $u->role === 3) {
+            $groupIds = $u->groups()->pluck('groups.id')->toArray();
+            return $q->whereIn('group_id', $groupIds);
+        }
+
+        // Super Admin: all
+        return $q;
+    }
+
+    /**
+     * ✅ Enforce scope server-side to prevent URL/state tampering.
+     */
+    protected function assertSubscriberInScope(int $subscriberId): void
+    {
+        $ok = $this->subscribersForUser()->where('id', $subscriberId)->exists();
+        abort_unless($ok, 403);
+    }
 
     public function mount(): void
     {
@@ -96,18 +114,28 @@ class FollowUpMonthlySheet extends Page
         $this->mobileDay = (int) $now->day;
         $this->mobileWeek = (int) ceil($this->mobileDay / 7);
 
-        // Default subscriber selection: first "my subscriber"
-        $firstSubscriberId = Subscriber::query()
-            ->where('user_id', Auth::id())
+        // Default subscriber selection (role-aware)
+        $this->subscriberId = $this->subscribersForUser()
             ->orderBy('id')
             ->value('id');
 
-        $this->subscriberId = $firstSubscriberId;
+        $this->clampMobileControls();
 
+        // Load initial data if a subscriber exists
         if ($this->subscriberId) {
             $this->loadPeriodAndItems();
         }
+    }
 
+    public function prevDay(): void
+    {
+        $this->mobileDay = max(1, $this->mobileDay - 1);
+        $this->clampMobileControls();
+    }
+
+    public function nextDay(): void
+    {
+        $this->mobileDay = min($this->daysInMonth(), $this->mobileDay + 1);
         $this->clampMobileControls();
     }
 
@@ -127,12 +155,10 @@ class FollowUpMonthlySheet extends Page
                         Forms\Components\Select::make('subscriberId')
                             ->label('المشترك')
                             ->preload()
-                            ->options(
-                                fn() => Subscriber::query()
-                                    ->where('user_id', Auth::id())
-                                    ->orderBy('name')
-                                    ->pluck('name', 'id')
-                                    ->toArray()
+                            ->options(fn () => $this->subscribersForUser()
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->toArray()
                             )
                             ->required()
                             ->reactive()
@@ -184,13 +210,10 @@ class FollowUpMonthlySheet extends Page
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn($y) => [$y => (string) $y])
+            ->mapWithKeys(fn ($y) => [$y => (string) $y])
             ->toArray();
     }
 
-    /**
-     * Helpful values for Blade
-     */
     public function daysInMonth(): int
     {
         if (!$this->year || !$this->month) {
@@ -214,33 +237,40 @@ class FollowUpMonthlySheet extends Page
             return;
         }
 
-        // ✅ Enforce ownership at runtime
-        $subscriber = Subscriber::query()
-            ->where('id', $this->subscriberId)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
+        $subscriberId = (int) $this->subscriberId;
 
-        $templateId = $subscriber->follow_up_template_id;
-        if (!$templateId) {
+        // ✅ Security: ensure this subscriber is within the current user's scope
+        $this->assertSubscriberInScope($subscriberId);
+
+        $subscriber = Subscriber::query()->findOrFail($subscriberId);
+
+        $templateId = (int) ($subscriber->follow_up_template_id ?? 0);
+        if ($templateId < 1) {
             return;
         }
 
+        // ✅ Period owner:
+        // store the subscriber's parent user_id (so ownership checks keep working)
         $this->period = FollowUpPeriod::query()->firstOrCreate(
             [
                 'subscriber_id' => $subscriber->id,
-                'year' => $this->year,
-                'month' => $this->month,
+                'year' => (int) $this->year,
+                'month' => (int) $this->month,
             ],
             [
                 'follow_up_template_id' => $templateId,
-                'user_id' => Auth::id(),
+                'user_id' => (int) $subscriber->user_id, // IMPORTANT: not Auth::id()
                 'is_month_locked' => false,
             ]
         );
 
-        // Safety
-        if ((int) $this->period->user_id !== (int) Auth::id()) {
-            abort(403);
+        // ✅ Safety:
+        // Parents must only access their own period.
+        // Supervisors already enforced via scope, but we keep this as extra defense.
+        // Super Admin can access all.
+        $u = Auth::user();
+        if ($u && (int) $u->role === 4) {
+            abort_unless((int) $this->period->user_id === (int) $u->id, 403);
         }
 
         $items = FollowUpItem::query()
@@ -267,7 +297,6 @@ class FollowUpMonthlySheet extends Page
 
         $daysInMonth = $this->daysInMonth();
 
-        // defaults: all unchecked
         $daily = [];
         foreach (range(1, $daysInMonth) as $day) {
             $daily[$day] = [];
@@ -306,7 +335,6 @@ class FollowUpMonthlySheet extends Page
                     $weekly[$w][$entry->follow_up_item_id] = true;
                 }
             } else {
-                // monthly
                 if (isset($monthly[$entry->follow_up_item_id])) {
                     $monthly[$entry->follow_up_item_id] = true;
                 }
@@ -320,15 +348,16 @@ class FollowUpMonthlySheet extends Page
         ];
     }
 
-
-
     public function save(): void
     {
-        if (!$this->period) {
+        if (!$this->period || !$this->subscriberId) {
             return;
         }
 
-        // Month locked => block saving
+        // ✅ Security: ensure subscriber is still in scope before writing
+        $this->assertSubscriberInScope((int) $this->subscriberId);
+
+        // Month locked => block saving (keep your policy)
         if ($this->period->is_month_locked) {
             Notification::make()
                 ->title('هذا الشهر مقفول')
@@ -359,8 +388,9 @@ class FollowUpMonthlySheet extends Page
                 $itemId = (int) $itemId;
                 $checked = (bool) $checked;
 
-                if ($itemId < 1)
+                if ($itemId < 1) {
                     continue;
+                }
 
                 if ($checked) {
                     FollowUpEntry::updateOrCreate(
@@ -402,8 +432,9 @@ class FollowUpMonthlySheet extends Page
                 $itemId = (int) $itemId;
                 $checked = (bool) $checked;
 
-                if ($itemId < 1)
+                if ($itemId < 1) {
                     continue;
+                }
 
                 if ($checked) {
                     FollowUpEntry::updateOrCreate(
@@ -428,14 +459,15 @@ class FollowUpMonthlySheet extends Page
         }
 
         // =========================
-        // Save MONTHLY (safe without DB unique)
+        // Save MONTHLY
         // =========================
         foreach ($this->state['monthly'] as $itemId => $checked) {
             $itemId = (int) $itemId;
             $checked = (bool) $checked;
 
-            if ($itemId < 1)
+            if ($itemId < 1) {
                 continue;
+            }
 
             $query = FollowUpEntry::query()
                 ->where('follow_up_period_id', $this->period->id)
@@ -444,7 +476,6 @@ class FollowUpMonthlySheet extends Page
                 ->whereNull('week_index');
 
             if ($checked) {
-                // Defensive: ensure only 1 row exists
                 $existing = $query->first();
 
                 if ($existing) {
@@ -468,194 +499,28 @@ class FollowUpMonthlySheet extends Page
             ->success()
             ->send();
 
-        // Reload to stay consistent
         $this->loadPeriodAndItems();
     }
 
-
     /**
-     * ✅ Autosave hook: every checkbox change persists immediately
-     */
-    public function updatedState($value, string $key): void
-    {
-        //     if (!$this->period) {
-        //         return;
-        //     }
-
-        //     // Month locked => block update (revert)
-        //     if ($this->period->is_month_locked) {
-        //         data_set($this->state, $key, !$value);
-        //         Notification::make()->title('الشهر مقفول')->danger()->send();
-        //         return;
-        //     }
-
-        //     $parts = explode('.', $key);
-        //     $type = $parts[0] ?? null;
-
-        //     if ($type === 'daily') {
-        //         $day = (int) ($parts[1] ?? 0);
-        //         $itemId = (int) ($parts[2] ?? 0);
-
-        //         if ($day < 1 || $day > $this->daysInMonth() || $itemId < 1) {
-        //             return;
-        //         }
-
-        //         $weekIndex = (int) ceil($day / 7);
-
-        //         if ($this->period->isWeekLocked($weekIndex)) {
-        //             data_set($this->state, $key, !$value);
-        //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
-        //             return;
-        //         }
-
-        //         $date = Carbon::createFromDate($this->year, $this->month, $day)->toDateString();
-
-        //         $this->upsertDailyEntry($itemId, (bool) $value, $date);
-
-        //         return;
-        //     }
-
-        //     if ($type === 'weekly') {
-        //         $weekIndex = (int) ($parts[1] ?? 0);
-        //         $itemId = (int) ($parts[2] ?? 0);
-
-        //         if ($weekIndex < 1 || $weekIndex > 5 || $itemId < 1) {
-        //             return;
-        //         }
-
-        //         if ($this->period->isWeekLocked($weekIndex)) {
-        //             data_set($this->state, $key, !$value);
-        //             Notification::make()->title("الأسبوع رقم {$weekIndex} مقفول")->danger()->send();
-        //             return;
-        //         }
-
-        //         $this->upsertWeeklyEntry($itemId, (bool) $value, $weekIndex);
-
-        //         return;
-        //     }
-
-        //     if ($type === 'monthly') {
-        //         $itemId = (int) ($parts[1] ?? 0);
-
-        //         if ($itemId < 1) {
-        //             return;
-        //         }
-
-        //         $this->upsertMonthlyEntry($itemId, (bool) $value);
-
-        //         return;
-        //     }
-    }
-
-    protected function upsertDailyEntry(int $itemId, bool $checked, string $date): void
-    {
-        if (!$this->period)
-            return;
-
-        if ($checked) {
-            FollowUpEntry::updateOrCreate(
-                [
-                    'follow_up_period_id' => $this->period->id,
-                    'follow_up_item_id' => $itemId,
-                    'date' => $date,
-                ],
-                [
-                    'week_index' => null,
-                    'value' => 1,
-                ]
-            );
-        } else {
-            FollowUpEntry::query()
-                ->where('follow_up_period_id', $this->period->id)
-                ->where('follow_up_item_id', $itemId)
-                ->whereDate('date', $date)
-                ->delete();
-        }
-    }
-
-    protected function upsertWeeklyEntry(int $itemId, bool $checked, int $weekIndex): void
-    {
-        if (!$this->period)
-            return;
-
-        if ($checked) {
-            FollowUpEntry::updateOrCreate(
-                [
-                    'follow_up_period_id' => $this->period->id,
-                    'follow_up_item_id' => $itemId,
-                    'week_index' => $weekIndex,
-                ],
-                [
-                    'date' => null,
-                    'value' => 1,
-                ]
-            );
-        } else {
-            FollowUpEntry::query()
-                ->where('follow_up_period_id', $this->period->id)
-                ->where('follow_up_item_id', $itemId)
-                ->where('week_index', $weekIndex)
-                ->delete();
-        }
-    }
-
-    /**
-     * ✅ Defensive monthly upsert (no unique index in DB)
-     */
-    protected function upsertMonthlyEntry(int $itemId, bool $checked): void
-    {
-        if (!$this->period)
-            return;
-
-        $query = FollowUpEntry::query()
-            ->where('follow_up_period_id', $this->period->id)
-            ->where('follow_up_item_id', $itemId)
-            ->whereNull('date')
-            ->whereNull('week_index');
-
-        if ($checked) {
-            $existing = $query->first();
-
-            if ($existing) {
-                $existing->update(['value' => 1]);
-            } else {
-                FollowUpEntry::create([
-                    'follow_up_period_id' => $this->period->id,
-                    'follow_up_item_id' => $itemId,
-                    'date' => null,
-                    'week_index' => null,
-                    'value' => 1,
-                ]);
-            }
-        } else {
-            $query->delete();
-        }
-    }
-
-    /**
-     * ✅ Unified locking: month/week/day (day maps to week)
-     *
-     * scope:
-     * - month: index ignored
-     * - week: index = 1..5
-     * - day: index = day number (1..31) -> week index derived
+     * ✅ Unified locking: month/week/day
+     * Only Super Admin + Supervisor can lock/unlock (kept).
      */
     public function toggleLock(string $scope, ?int $index = null, bool $locked = true): void
     {
         $user = auth()->user();
 
-        // ✅ Only Super Admin + Supervisor can lock/unlock
         if (!$user || (!$user->isSuperAdmin() && !$user->isSupervisor())) {
             Notification::make()
                 ->title('ليس لديك صلاحية القفل/الفتح')
                 ->danger()
                 ->send();
-
             return;
         }
-        
-        if (!$this->period)
+
+        if (!$this->period) {
             return;
+        }
 
         if ($scope === 'month') {
             $this->period->update([
@@ -712,26 +577,11 @@ class FollowUpMonthlySheet extends Page
     {
         $days = $this->daysInMonth();
 
-        if ($this->mobileDay < 1) {
-            $this->mobileDay = 1;
-        }
-
-        if ($this->mobileDay > $days) {
-            $this->mobileDay = $days;
-        }
-
+        $this->mobileDay = max(1, min($days, (int) $this->mobileDay));
         $this->mobileWeek = (int) ceil($this->mobileDay / 7);
-
-        if ($this->mobileWeek < 1) {
-            $this->mobileWeek = 1;
-        }
-
-        if ($this->mobileWeek > 5) {
-            $this->mobileWeek = 5;
-        }
+        $this->mobileWeek = max(1, min(5, $this->mobileWeek));
     }
 
-    /** Mobile helpers (kept) */
     public function getMobileWeekIndexProperty(): int
     {
         return (int) ceil($this->mobileDay / 7);

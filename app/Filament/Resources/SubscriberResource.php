@@ -4,6 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriberResource\Pages;
 use App\Models\Subscriber;
+use App\Models\FollowUpTemplate;
+use App\Models\User;
+use App\Models\Group;
+use App\Models\Stage;
+
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Components\Grid;
@@ -12,39 +17,22 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\FileUpload;
+
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\FileUpload;
 use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\ColorColumn;
-use App\Models\FollowUpTemplate;
-use App\Models\User;
-
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\TernaryFilter;
 
+use Illuminate\Database\Eloquent\Builder;
 
-use App\Models\Group;
-use App\Models\Stage;
-
-use App\Support\Roles;
-
-use Filament\Forms\Get;
 use Filament\Forms\Set;
-
-
-
-
-
-
 
 class SubscriberResource extends Resource
 {
@@ -56,22 +44,86 @@ class SubscriberResource extends Resource
     protected static ?string $pluralModelLabel = 'المشتركين';
     protected static ?string $navigationGroup = 'البيانات الأساسية';
 
+    /**
+     * ✅ Centralized scope: this is the “replacement rule”
+     * - Super Admin: all
+     * - Supervisor: only their groups
+     * - Parent: only where subscriber.user_id = auth user
+     * - Monitor: all (as your current policy)
+     * - Others: none
+     */
+    protected static function scopedSubscribersQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
 
+        if (!$user) {
+            return $query->whereRaw('1=0');
+        }
+
+        // Super Admin (1): all
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        // Supervisor (3): only their groups
+        if ($user->isSupervisor()) {
+            $groupIds = $user->groups()->pluck('groups.id')->toArray();
+            return $query->whereIn('group_id', $groupIds);
+        }
+
+        // Parent (4): only their subscribers
+        if ((int) $user->role === User::ROLE_PARENT) {
+            return $query->where('user_id', $user->id);
+        }
+
+        // Monitor (2): all (keep your current behavior)
+        if ((int) $user->role === 2) {
+            return $query;
+        }
+
+        return $query->whereRaw('1=0');
+    }
+
+    /**
+     * ✅ Centralized groups options:
+     * - Supervisor: only their groups
+     * - Super Admin / Monitor: all groups
+     */
+    protected static function scopedGroupsOptions(): array
+    {
+        $u = auth()->user();
+
+        if (!$u) {
+            return [];
+        }
+
+        if ((int) $u->role === 3) {
+            return $u->groups()->pluck('name', 'groups.id')->toArray();
+        }
+
+        return Group::query()->orderBy('name')->pluck('name', 'id')->toArray();
+    }
+
+    /**
+     * ✅ Parents options (for selecting ولي الأمر)
+     * Always parents only.
+     */
+    protected static function parentUsersOptions()
+    {
+        return User::query()
+            ->where('role', User::ROLE_PARENT)
+            ->orderBy('name')
+            ->pluck('name', 'id');
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-
                 Section::make(__('المرحلة والمجموعة'))
                     ->schema([
                         Grid::make(1)->schema([
-                            // Select::make('track_degree_id')
-                            //     ->label('درجة المضمار')
-                            //     ->relationship('trackDegree', 'title')
-                            //     ->searchable()
-                            //     ->preload()
-                            //     ->required(),
                             Select::make('stage_id')
                                 ->label('درجة المرحلة')
                                 ->relationship('stage', 'name')
@@ -84,21 +136,12 @@ class SubscriberResource extends Resource
                                 ->relationship('group', 'name')
                                 ->searchable()
                                 ->preload()
-                                ->options(function () {
-                                    $u = auth()->user();
-
-                                    if ((int) $u->role === 3) {
-                                        return $u->groups()->pluck('name', 'groups.id')->toArray();
-                                    }
-
-                                    return Group::query()->pluck('name', 'id')->toArray();
-                                })
+                                ->options(fn () => static::scopedGroupsOptions())
                                 ->required(),
 
                             DatePicker::make('join_date')
                                 ->label(__('تاريخ الانضمام'))
                                 ->minDate('2022-01-01'),
-
                         ]),
                     ])
                     ->extraAttributes([
@@ -127,16 +170,6 @@ class SubscriberResource extends Resource
                     ->schema([
                         Grid::make(2)->schema([
                             TextInput::make('name')->label(__('name'))->required(),
-
-                            // Select::make('gender')
-                            //     ->label('الجنس')
-                            //     ->options([
-                            //             'male' => 'ذكر',
-                            //             'female' => 'أنثى',
-                            //         ])
-                            //     ->required()
-                            //     ->native(false),
-
 
                             Forms\Components\Select::make('follow_up_template_id')
                                 ->label('نموذج المتابعة')
@@ -216,38 +249,33 @@ class SubscriberResource extends Resource
                     ]),
 
                 Section::make(__('Parents\' Work'))
-
-
                     ->schema([
                         Grid::make(2)->schema([
-
                             Select::make('user_id')
                                 ->label('ولي الأمر')
-                                ->options(
-                                    fn() => User::query()
-                                        ->where('role', User::ROLE_PARENT) // parents only
-                                        ->orderBy('name')
-                                        ->pluck('name', 'id')
-                                )
+                                ->options(fn () => static::parentUsersOptions())
                                 ->searchable()
                                 ->required()
-                                ->default(fn() => auth()->user()?->role === User::ROLE_PARENT ? auth()->id() : null)
-                                ->hidden(fn() => auth()->user()?->role === User::ROLE_PARENT),
+                                ->default(fn () => auth()->user()?->role === User::ROLE_PARENT ? auth()->id() : null)
+                                ->hidden(fn () => auth()->user()?->role === User::ROLE_PARENT),
 
                             TextInput::make('father_job')
                                 ->label(__('father_job'))
                                 ->datalist(Subscriber::query()->distinct()->whereNotNull('father_job')->pluck('father_job')->filter()->values()->all()),
+
                             Select::make('father_job_type')->label(__('father_job_type'))->options([
-                                0 => __('unemployed'),
+                                0 => __('البيت'),
                                 1 => __('public_sector'),
                                 2 => __('private_sector'),
                                 3 => __('retired'),
                             ]),
+
                             TextInput::make('mother_job')
                                 ->label(__('mother_job'))
                                 ->datalist(Subscriber::query()->distinct()->whereNotNull('mother_job')->pluck('mother_job')->filter()->values()->all()),
+
                             Select::make('mother_job_type')->label(__('mother_job_type'))->options([
-                                0 => __('unemployed'),
+                                0 => __('البيت'),
                                 1 => __('public_sector'),
                                 2 => __('private_sector'),
                                 3 => __('retired'),
@@ -275,20 +303,19 @@ class SubscriberResource extends Resource
                 Section::make(__('Relatives'))
                     ->schema([
                         Grid::make(2)->schema([
-
                             Toggle::make('has_relatives_at_madareg_administration')
                                 ->label(__('has_relatives_at_madareg_administration'))
-                                ->live() // or ->reactive() depending on your Filament version
+                                ->live()
                                 ->afterStateUpdated(function (Set $set, $state) {
                                     if (!$state) {
-                                        $set('relatives_at_madareg_administration', null); // optional: clear value
+                                        $set('relatives_at_madareg_administration', null);
                                     }
                                 }),
 
                             TextInput::make('relatives_at_madareg_administration')
                                 ->label(__('relatives_at_madareg_administration'))
-                                ->disabled(fn($get) => !$get('has_relatives_at_madareg_administration'))
-                                ->dehydrated(fn($get) => $get('has_relatives_at_madareg_administration')),
+                                ->disabled(fn ($get) => !$get('has_relatives_at_madareg_administration'))
+                                ->dehydrated(fn ($get) => $get('has_relatives_at_madareg_administration')),
 
                             Toggle::make('has_relatives_at_madareg')
                                 ->label(__('has_relatives_at_madareg'))
@@ -301,17 +328,8 @@ class SubscriberResource extends Resource
 
                             TextInput::make('relatives_at_madareg')
                                 ->label(__('relatives_at_madareg'))
-                                ->disabled(fn($get) => !$get('has_relatives_at_madareg'))
-                                ->dehydrated(fn($get) => $get('has_relatives_at_madareg')),
-
-                            // Toggle::make('has_relatives_at_madareg_administration')
-                            //     ->label(__('has_relatives_at_madareg_administration')),
-                            // TextInput::make('relatives_at_madareg_administration')
-                            //     ->label(__('relatives_at_madareg_administration')),
-                            // Toggle::make('has_relatives_at_madareg')
-                            //     ->label(__('has_relatives_at_madareg')),
-                            // TextInput::make('relatives_at_madareg')
-                            //     ->label(__('relatives_at_madareg')),
+                                ->disabled(fn ($get) => !$get('has_relatives_at_madareg'))
+                                ->dehydrated(fn ($get) => $get('has_relatives_at_madareg')),
                         ]),
                     ])
                     ->extraAttributes([
@@ -333,7 +351,6 @@ class SubscriberResource extends Resource
                     ->schema([
                         Grid::make(2)->schema([
                             Toggle::make('active')->label(__('active')),
-                            // Toggle::make('locked')->label(__('locked')),
                         ]),
                     ])
                     ->extraAttributes([
@@ -342,17 +359,13 @@ class SubscriberResource extends Resource
             ]);
     }
 
-
-
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-
                 TextColumn::make('stage.name')
                     ->label('المرحلة')
-                    ->formatStateUsing(fn($state) => $state ?? 'غير محددة')
+                    ->formatStateUsing(fn ($state) => $state ?? 'غير محددة')
                     ->extraAttributes(function ($record) {
                         $color = $record->stage->color ?? '#999999';
 
@@ -382,8 +395,6 @@ class SubscriberResource extends Resource
                     ->sortable()
                     ->searchable(),
 
-
-
                 TextColumn::make('track_degree_id')
                     ->label('مجموع الدرجات')
                     ->sortable(),
@@ -392,29 +403,16 @@ class SubscriberResource extends Resource
                     ->label('درجة المضمار')
                     ->sortable(),
 
-                // TextColumn::make('stage.name')
-                //     ->label('المرحلة')
-                //     ->sortable(),
-
-
-                // Always visible
                 TextColumn::make('name')
                     ->label(__('name'))
                     ->searchable()
                     ->sortable(),
 
-                // Tables\Columns\TextColumn::make('gender')
-                //     ->label('الجنس')
-                //     ->formatStateUsing(fn($state) => $state === 'male' ? 'ذكر' : ($state === 'female' ? 'أنثى' : '-'))
-                //     ->sortable(),
-
-
                 TextColumn::make('birth_date')
                     ->label(__('birth_date'))
                     ->date(),
 
-                TextColumn::make('study_level')
-                    ->label(__('study_level')),
+                TextColumn::make('study_level')->label(__('study_level')),
 
                 BadgeColumn::make('education_type')
                     ->label(__('education_type'))
@@ -423,15 +421,14 @@ class SubscriberResource extends Resource
                         'success' => 1,
                         'info' => 2,
                     ])
-                    ->formatStateUsing(fn($state) => match ((int) $state) {
+                    ->formatStateUsing(fn ($state) => match ((int) $state) {
                         0 => __('education_type_public'),
                         1 => __('education_type_private'),
                         2 => __('education_type_international'),
                         default => '—',
                     }),
 
-                ToggleColumn::make('is_quran_student')
-                    ->label(__('is_quran_student')),
+                ToggleColumn::make('is_quran_student')->label(__('is_quran_student')),
 
                 BadgeColumn::make('health_status')
                     ->label(__('health_status'))
@@ -439,13 +436,12 @@ class SubscriberResource extends Resource
                         'success' => 0,
                         'danger' => 1,
                     ])
-                    ->formatStateUsing(fn($state) => match ((int) $state) {
+                    ->formatStateUsing(fn ($state) => match ((int) $state) {
                         0 => __('health_good'),
                         1 => __('health_bad'),
                         default => '—',
                     }),
 
-                // Toggleable extra fields
                 TextColumn::make('birth_place')->label(__('birth_place'))->toggleable(),
                 TextColumn::make('residence_place')->label(__('residence_place'))->toggleable(),
                 TextColumn::make('nationality')->label(__('nationality'))->toggleable(),
@@ -456,7 +452,7 @@ class SubscriberResource extends Resource
 
                 TextColumn::make('social_status')
                     ->label(__('social_status'))
-                    ->formatStateUsing(fn($state) => match ((int) $state) {
+                    ->formatStateUsing(fn ($state) => match ((int) $state) {
                         0 => __('social_with_parents'),
                         1 => __('orphan_father'),
                         2 => __('orphan_mother'),
@@ -469,9 +465,10 @@ class SubscriberResource extends Resource
                     ->toggleable(),
 
                 TextColumn::make('father_job')->label(__('father_job'))->toggleable(),
+
                 TextColumn::make('father_job_type')
                     ->label(__('father_job_type'))
-                    ->formatStateUsing(fn($state) => match ((int) $state) {
+                    ->formatStateUsing(fn ($state) => match ((int) $state) {
                         0 => __('unemployed'),
                         1 => __('public_sector'),
                         2 => __('private_sector'),
@@ -481,9 +478,10 @@ class SubscriberResource extends Resource
                     ->toggleable(),
 
                 TextColumn::make('mother_job')->label(__('mother_job'))->toggleable(),
+
                 TextColumn::make('mother_job_type')
                     ->label(__('mother_job_type'))
-                    ->formatStateUsing(fn($state) => match ((int) $state) {
+                    ->formatStateUsing(fn ($state) => match ((int) $state) {
                         0 => __('unemployed'),
                         1 => __('public_sector'),
                         2 => __('private_sector'),
@@ -499,16 +497,9 @@ class SubscriberResource extends Resource
                 TextColumn::make('relatives_at_madareg')->label(__('relatives_at_madareg'))->toggleable(),
                 TextColumn::make('father_phone')->label(__('father_phone'))->toggleable(),
                 TextColumn::make('mother_phone')->label(__('mother_phone'))->toggleable(),
-                ToggleColumn::make('active')
-                    ->label(__('active'))
-                    ->toggleable(),
 
-                // ToggleColumn::make('locked')
-                //     ->label(__('locked'))
-                //     ->toggleable(),
-
+                ToggleColumn::make('active')->label(__('active'))->toggleable(),
             ])
-
             ->filters([
                 SelectFilter::make('education_type')
                     ->label(__('education_type'))
@@ -531,11 +522,11 @@ class SubscriberResource extends Resource
                     ->searchable()
                     ->preload(),
 
+                // ✅ Group filter options should match scope (supervisor sees only their groups)
                 SelectFilter::make('group_id')
                     ->label('المجموعة')
-                    ->relationship('group', 'name')
-                    ->searchable()
-                    ->preload(),
+                    ->options(fn () => static::scopedGroupsOptions())
+                    ->searchable(),
 
                 SelectFilter::make('follow_up_template_id')
                     ->label('نموذج المتابعة')
@@ -547,7 +538,6 @@ class SubscriberResource extends Resource
                     )
                     ->searchable(),
 
-
                 Filter::make('join_date')
                     ->form([
                         DatePicker::make('from')->label(__('From')),
@@ -555,24 +545,9 @@ class SubscriberResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'] ?? null, fn($q, $date) => $q->whereDate('join_date', '>=', $date))
-                            ->when($data['until'] ?? null, fn($q, $date) => $q->whereDate('join_date', '<=', $date));
+                            ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('join_date', '>=', $date))
+                            ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('join_date', '<=', $date));
                     }),
-
-                // SelectFilter::make('follow_up_template_id')
-                //     ->label('نموذج المتابعة')
-                //     ->options(
-                //         FollowUpTemplate::query()
-                //             ->orderBy('name_ar')
-                //             ->pluck('name_ar', 'id')
-                //             ->toArray()
-                //     )
-                //     ->searchable(),
-                SelectFilter::make('group')
-                    ->label('المجموعة')
-                    ->relationship('group', 'name')
-                    ->searchable()
-                    ->preload(),
 
                 SelectFilter::make('stage_id')
                     ->label('المرحلة')
@@ -610,68 +585,32 @@ class SubscriberResource extends Resource
                         0 => __('no'),
                     ]),
             ])
-
             ->actions([
                 Tables\Actions\ViewAction::make()->label(__('View')),
                 Tables\Actions\EditAction::make()->label(__('Edit')),
                 Tables\Actions\DeleteAction::make()->label(__('Delete')),
             ])
-
             ->bulkActions([
-                //   Tables\Actions\DeleteBulkAction::make()->label(__('Delete selected')),
+                // Tables\Actions\DeleteBulkAction::make()->label(__('Delete selected')),
             ]);
     }
 
-
-
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    /**
+     * ✅ Use the centralized scope for the resource query.
+     */
+    public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-        $user = auth()->user();
-
-        // 1. Super-Admin (1): Sees everything
-        if ($user->isSuperAdmin())
-            // return $query;
-        return Subscriber::query();
-
-        // 2. Supervisor (3): Sees only subscribers in their assigned groups
-        if ($user->isSupervisor()) {
-            $groupIds = $user->groups()->pluck('groups.id')->toArray();
-            return $query->whereIn('group_id', $groupIds);
-        }
-
-        // 3. Parent (4): Sees only their own children
-        if ($user->role === 4) {
-            return $query->where('user_id', $user->id);
-        }
-
-        // 4. Monitor (2): Can see all for activity tracking
-        if ($user->role === 2)
-            return $query;
-
-        return $query->whereRaw('1=0');
+        return static::scopedSubscribersQuery();
     }
 
-
+    /**
+     * Keep navigation staff-only as you already designed.
+     */
     public static function shouldRegisterNavigation(): bool
     {
         $user = auth()->user();
         return $user?->isStaff() ?? false;
     }
-
-
-    // public static function getEloquentQuery(): Builder
-    // {
-    //     $query = parent::getEloquentQuery();
-    //     $user = auth()->user();
-
-    //     if ($user?->isStaff()) {
-    //         return $query;
-    //     }
-
-    //     return $query->where('user_id', $user->id);
-    // }
-
 
     public static function getRelations(): array
     {
@@ -688,17 +627,4 @@ class SubscriberResource extends Resource
             'edit' => Pages\EditSubscriber::route('/{record}/edit'),
         ];
     }
-
-    // public static function getEloquentQuery(): Builder
-    // {
-    //     $query = parent::getEloquentQuery();
-
-    //     if (auth()->user()->role === 3) {
-    //         $groupIds = auth()->user()->groups()->pluck('groups.id');
-    //         $query->whereIn('group_id', $groupIds);
-    //     }
-
-    //     return $query;
-    // }
-
 }

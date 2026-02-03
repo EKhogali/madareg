@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
-
 use App\Models\Group;
 use App\Models\Subscriber;
 use App\Models\FollowUpPeriod;
@@ -11,6 +10,7 @@ use App\Models\FollowUpItem;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Pages\Page;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Support\Traits\HasLauncherBackAction;
@@ -18,6 +18,7 @@ use App\Support\Traits\HasLauncherBackAction;
 class MonthlyFollowUpReport extends Page
 {
     use HasLauncherBackAction;
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'تقرير المتابعة الشهرية';
     protected static ?string $navigationGroup = 'المتابعة';
@@ -33,12 +34,11 @@ class MonthlyFollowUpReport extends Page
     public int $year;
     public int $month;
 
-    /** ✅ KPI column selector */
+    /** KPI column selector */
     public array $selectedKpis = ['daily', 'weekly', 'monthly', 'total', 'status'];
 
     /** Results */
     public array $reportRows = [];
-
 
     public static function canAccess(): bool
     {
@@ -62,6 +62,118 @@ class MonthlyFollowUpReport extends Page
         $this->buildReport();
     }
 
+    /**
+     * ✅ Central policy for subscribers in this report:
+     * - Super Admin: all
+     * - Supervisor: only their groups
+     * - Parent: only subscriber.user_id = auth user
+     */
+    protected function subscribersForUser(): Builder
+    {
+        $u = Auth::user();
+        $q = Subscriber::query()->with('followUpTemplate');
+
+        if (!$u) {
+            return $q->whereRaw('1=0');
+        }
+
+        if ($u->isSuperAdmin()) {
+            return $q;
+        }
+
+        if ((int) $u->role === User::ROLE_SUPERVISOR || (int) $u->role === 3) {
+            $groupIds = $u->groups()->pluck('groups.id')->toArray();
+            return $q->whereIn('group_id', $groupIds);
+        }
+
+        if ((int) $u->role === User::ROLE_PARENT || (int) $u->role === 4) {
+            return $q->where('user_id', $u->id);
+        }
+
+        return $q->whereRaw('1=0');
+    }
+
+    /**
+     * ✅ Groups options must match user scope.
+     * - Super Admin: all groups
+     * - Supervisor: only assigned groups
+     * - Parent: only groups that contain their subscribers
+     */
+    protected function groupOptions(): array
+    {
+        $u = Auth::user();
+        $q = Group::query()->orderBy('name');
+
+        if (!$u) {
+            return [];
+        }
+
+        if ($u->isSuperAdmin()) {
+            return $q->pluck('name', 'id')->toArray();
+        }
+
+        if ((int) $u->role === 3) {
+            $groupIds = $u->groups()->pluck('groups.id')->toArray();
+            return $q->whereIn('id', $groupIds)->pluck('name', 'id')->toArray();
+        }
+
+        if ((int) $u->role === 4) {
+            $groupIds = Subscriber::query()
+                ->where('user_id', $u->id)
+                ->whereNotNull('group_id')
+                ->pluck('group_id')
+                ->unique()
+                ->toArray();
+
+            return $q->whereIn('id', $groupIds)->pluck('name', 'id')->toArray();
+        }
+
+        return [];
+    }
+
+    /**
+     * ✅ Subscribers dropdown options must match user scope + selected filters.
+     */
+    protected function subscriberOptions(): array
+    {
+        $q = $this->subscribersForUser()->orderBy('name');
+
+        if ($this->groupId) {
+            $q->where('group_id', $this->groupId);
+        }
+
+        if ($this->templateId) {
+            $q->where('follow_up_template_id', $this->templateId);
+        }
+
+        return $q->pluck('name', 'id')->toArray();
+    }
+
+    /**
+     * ✅ Template options must match user scope + selected filters.
+     */
+    protected function templateOptions(): array
+    {
+        $q = $this->subscribersForUser();
+
+        if ($this->groupId) {
+            $q->where('group_id', $this->groupId);
+        }
+
+        if ($this->subscriberId) {
+            $q->where('id', $this->subscriberId);
+        }
+
+        return $q
+            ->whereNotNull('follow_up_template_id')
+            ->select('follow_up_template_id')
+            ->distinct()
+            ->with('followUpTemplate:id,name_ar')
+            ->get()
+            ->pluck('followUpTemplate.name_ar', 'follow_up_template_id')
+            ->toArray();
+    }
+
     public function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([
@@ -72,40 +184,44 @@ class MonthlyFollowUpReport extends Page
                     Forms\Components\Select::make('groupId')
                         ->label('المجموعة')
                         ->preload()
-                        ->options(fn() => $this->groupOptions())
+                        ->options(fn () => $this->groupOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn() => $this->buildReport())
+                        ->afterStateUpdated(function () {
+                            // reset dependent filters to avoid “stale” ids
+                            $this->subscriberId = null;
+                            $this->templateId = null;
+                            $this->buildReport();
+                        })
                         ->searchable(),
 
                     Forms\Components\Select::make('subscriberId')
                         ->label('المشترك')
                         ->preload()
-                        ->options(fn() => $this->subscriberOptions())
+                        ->options(fn () => $this->subscriberOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn() => $this->buildReport())
+                        ->afterStateUpdated(fn () => $this->buildReport())
                         ->searchable(),
 
                     Forms\Components\Select::make('templateId')
                         ->label('نموذج المتابعة')
                         ->preload()
-                        ->options(fn() => $this->templateOptions())
+                        ->options(fn () => $this->templateOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn() => $this->buildReport())
+                        ->afterStateUpdated(fn () => $this->buildReport())
                         ->searchable(),
 
                     Forms\Components\Select::make('month')
                         ->label('الشهر')
                         ->options($this->monthOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn() => $this->buildReport()),
+                        ->afterStateUpdated(fn () => $this->buildReport()),
 
                     Forms\Components\Select::make('year')
                         ->label('السنة')
                         ->options($this->yearOptions())
                         ->reactive()
-                        ->afterStateUpdated(fn() => $this->buildReport()),
+                        ->afterStateUpdated(fn () => $this->buildReport()),
 
-                    /** ✅ KPI selector */
                     Forms\Components\CheckboxList::make('selectedKpis')
                         ->label('الأعمدة الظاهرة')
                         ->options([
@@ -119,77 +235,6 @@ class MonthlyFollowUpReport extends Page
                         ->reactive(),
                 ]),
         ]);
-    }
-
-    protected function groupOptions(): array
-    {
-        $query = Group::query()->orderBy('name');
-
-        // Supervisor sees only their groups
-        if (Auth::user()?->role === User::ROLE_SUPERVISOR) {
-            $groupIds = Auth::user()->groups()->pluck('groups.id');
-            $query->whereIn('id', $groupIds);
-        }
-
-        // Parent (role 4): optional return groups of their subscribers only
-        if (Auth::user()?->role === User::ROLE_PARENT) {
-            $groupIds = Subscriber::query()
-                ->where('user_id', Auth::id())
-                ->whereNotNull('group_id')
-                ->pluck('group_id')
-                ->unique();
-
-            $query->whereIn('id', $groupIds);
-        }
-
-        return $query->pluck('name', 'id')->toArray();
-    }
-
-    protected function subscriberOptions(): array
-    {
-        $query = Subscriber::query()->orderBy('name');
-
-        if ($this->groupId) {
-            $query->where('group_id', $this->groupId);
-        }
-
-        if (Auth::user()?->role === 4) {
-            $query->where('user_id', Auth::id());
-        }
-
-        if (Auth::user()?->role === 3) {
-            $groupIds = Auth::user()->groups()->pluck('groups.id');
-            $query->whereIn('group_id', $groupIds);
-        }
-
-        return $query->pluck('name', 'id')->toArray();
-    }
-
-    protected function templateOptions(): array
-    {
-        $query = Subscriber::query();
-
-        if ($this->groupId) {
-            $query->where('group_id', $this->groupId);
-        }
-
-        if (Auth::user()?->role === 4) {
-            $query->where('user_id', Auth::id());
-        }
-
-        if (Auth::user()?->role === 3) {
-            $groupIds = Auth::user()->groups()->pluck('groups.id');
-            $query->whereIn('group_id', $groupIds);
-        }
-
-        return $query
-            ->whereNotNull('follow_up_template_id')
-            ->select('follow_up_template_id')
-            ->distinct()
-            ->with('followUpTemplate:id,name_ar')
-            ->get()
-            ->pluck('followUpTemplate.name_ar', 'follow_up_template_id')
-            ->toArray();
     }
 
     protected function monthOptions(): array
@@ -215,11 +260,11 @@ class MonthlyFollowUpReport extends Page
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn($y) => [$y => (string) $y])
+            ->mapWithKeys(fn ($y) => [$y => (string) $y])
             ->toArray();
     }
 
-    /** ✅ Main report builder */
+    /** ✅ Main report builder (scoped) */
     public function buildReport(): void
     {
         $this->reportRows = [];
@@ -231,7 +276,8 @@ class MonthlyFollowUpReport extends Page
         $daysLimit = $isCurrentMonth ? (int) $now->day : $daysInMonth;
         $weekLimit = $isCurrentMonth ? (int) ceil($daysLimit / 7) : 5;
 
-        $subsQuery = Subscriber::query()->with('followUpTemplate');
+        // ✅ Start from scoped subscribers query
+        $subsQuery = $this->subscribersForUser();
 
         if ($this->subscriberId) {
             $subsQuery->where('id', $this->subscriberId);
@@ -245,21 +291,12 @@ class MonthlyFollowUpReport extends Page
             $subsQuery->where('group_id', $this->groupId);
         }
 
-        if (Auth::user()?->role === 4) {
-            $subsQuery->where('user_id', Auth::id());
-        }
-
-        if (Auth::user()?->role === 3) {
-            $groupIds = Auth::user()->groups()->pluck('groups.id');
-            $subsQuery->whereIn('group_id', $groupIds);
-        }
-
         $subscribers = $subsQuery->get();
 
         foreach ($subscribers as $subscriber) {
-
-            if (!$subscriber->follow_up_template_id)
+            if (!$subscriber->follow_up_template_id) {
                 continue;
+            }
 
             $period = FollowUpPeriod::query()
                 ->where('subscriber_id', $subscriber->id)
@@ -347,8 +384,7 @@ class MonthlyFollowUpReport extends Page
             ];
         }
 
-        // ✅ Ranking by total
-        usort($this->reportRows, fn($a, $b) => $b['total'] <=> $a['total']);
+        usort($this->reportRows, fn ($a, $b) => $b['total'] <=> $a['total']);
     }
 
     protected function getHeaderActions(): array
