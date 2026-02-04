@@ -136,8 +136,9 @@ class SubscriberResource extends Resource
                                 ->relationship('group', 'name')
                                 ->searchable()
                                 ->preload()
-                                ->options(fn () => static::scopedGroupsOptions())
-                                ->required(),
+                                ->options(fn() => static::scopedGroupsOptions())
+                                // ->required()
+                                ,
 
                             DatePicker::make('join_date')
                                 ->label(__('تاريخ الانضمام'))
@@ -253,11 +254,11 @@ class SubscriberResource extends Resource
                         Grid::make(2)->schema([
                             Select::make('user_id')
                                 ->label('ولي الأمر')
-                                ->options(fn () => static::parentUsersOptions())
+                                ->options(fn() => static::parentUsersOptions())
                                 ->searchable()
                                 ->required()
-                                ->default(fn () => auth()->user()?->role === User::ROLE_PARENT ? auth()->id() : null)
-                                ->hidden(fn () => auth()->user()?->role === User::ROLE_PARENT),
+                                ->default(fn() => auth()->user()?->role === User::ROLE_PARENT ? auth()->id() : null)
+                                ->hidden(fn() => auth()->user()?->role === User::ROLE_PARENT),
 
                             TextInput::make('father_job')
                                 ->label(__('father_job'))
@@ -314,8 +315,8 @@ class SubscriberResource extends Resource
 
                             TextInput::make('relatives_at_madareg_administration')
                                 ->label(__('relatives_at_madareg_administration'))
-                                ->disabled(fn ($get) => !$get('has_relatives_at_madareg_administration'))
-                                ->dehydrated(fn ($get) => $get('has_relatives_at_madareg_administration')),
+                                ->disabled(fn($get) => !$get('has_relatives_at_madareg_administration'))
+                                ->dehydrated(fn($get) => $get('has_relatives_at_madareg_administration')),
 
                             Toggle::make('has_relatives_at_madareg')
                                 ->label(__('has_relatives_at_madareg'))
@@ -328,8 +329,8 @@ class SubscriberResource extends Resource
 
                             TextInput::make('relatives_at_madareg')
                                 ->label(__('relatives_at_madareg'))
-                                ->disabled(fn ($get) => !$get('has_relatives_at_madareg'))
-                                ->dehydrated(fn ($get) => $get('has_relatives_at_madareg')),
+                                ->disabled(fn($get) => !$get('has_relatives_at_madareg'))
+                                ->dehydrated(fn($get) => $get('has_relatives_at_madareg')),
                         ]),
                     ])
                     ->extraAttributes([
@@ -365,7 +366,7 @@ class SubscriberResource extends Resource
             ->columns([
                 TextColumn::make('stage.name')
                     ->label('المرحلة')
-                    ->formatStateUsing(fn ($state) => $state ?? 'غير محددة')
+                    ->formatStateUsing(fn($state) => $state ?? 'غير محددة')
                     ->extraAttributes(function ($record) {
                         $color = $record->stage->color ?? '#999999';
 
@@ -421,7 +422,7 @@ class SubscriberResource extends Resource
                         'success' => 1,
                         'info' => 2,
                     ])
-                    ->formatStateUsing(fn ($state) => match ((int) $state) {
+                    ->formatStateUsing(fn($state) => match ((int) $state) {
                         0 => __('education_type_public'),
                         1 => __('education_type_private'),
                         2 => __('education_type_international'),
@@ -436,7 +437,7 @@ class SubscriberResource extends Resource
                         'success' => 0,
                         'danger' => 1,
                     ])
-                    ->formatStateUsing(fn ($state) => match ((int) $state) {
+                    ->formatStateUsing(fn($state) => match ((int) $state) {
                         0 => __('health_good'),
                         1 => __('health_bad'),
                         default => '—',
@@ -452,7 +453,7 @@ class SubscriberResource extends Resource
 
                 TextColumn::make('social_status')
                     ->label(__('social_status'))
-                    ->formatStateUsing(fn ($state) => match ((int) $state) {
+                    ->formatStateUsing(fn($state) => match ((int) $state) {
                         0 => __('social_with_parents'),
                         1 => __('orphan_father'),
                         2 => __('orphan_mother'),
@@ -468,7 +469,7 @@ class SubscriberResource extends Resource
 
                 TextColumn::make('father_job_type')
                     ->label(__('father_job_type'))
-                    ->formatStateUsing(fn ($state) => match ((int) $state) {
+                    ->formatStateUsing(fn($state) => match ((int) $state) {
                         0 => __('unemployed'),
                         1 => __('public_sector'),
                         2 => __('private_sector'),
@@ -481,7 +482,7 @@ class SubscriberResource extends Resource
 
                 TextColumn::make('mother_job_type')
                     ->label(__('mother_job_type'))
-                    ->formatStateUsing(fn ($state) => match ((int) $state) {
+                    ->formatStateUsing(fn($state) => match ((int) $state) {
                         0 => __('unemployed'),
                         1 => __('public_sector'),
                         2 => __('private_sector'),
@@ -525,7 +526,7 @@ class SubscriberResource extends Resource
                 // ✅ Group filter options should match scope (supervisor sees only their groups)
                 SelectFilter::make('group_id')
                     ->label('المجموعة')
-                    ->options(fn () => static::scopedGroupsOptions())
+                    ->options(fn() => static::scopedGroupsOptions())
                     ->searchable(),
 
                 SelectFilter::make('follow_up_template_id')
@@ -545,8 +546,8 @@ class SubscriberResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data) {
                         return $query
-                            ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('join_date', '>=', $date))
-                            ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('join_date', '<=', $date));
+                            ->when($data['from'] ?? null, fn($q, $date) => $q->whereDate('join_date', '>=', $date))
+                            ->when($data['until'] ?? null, fn($q, $date) => $q->whereDate('join_date', '<=', $date));
                     }),
 
                 SelectFilter::make('stage_id')
@@ -585,6 +586,8 @@ class SubscriberResource extends Resource
                         0 => __('no'),
                     ]),
             ])
+            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+
             ->actions([
                 Tables\Actions\ViewAction::make()->label(__('View')),
                 Tables\Actions\EditAction::make()->label(__('Edit')),
@@ -624,6 +627,7 @@ class SubscriberResource extends Resource
         return [
             'index' => Pages\ListSubscribers::route('/'),
             'create' => Pages\CreateSubscriber::route('/create'),
+            'view' => Pages\ViewSubscriber::route('/{record}'),
             'edit' => Pages\EditSubscriber::route('/{record}/edit'),
         ];
     }

@@ -93,14 +93,50 @@ class GroupSupervisorsRelationManager extends RelationManager
                         $query->where('role', \App\Models\User::ROLE_SUPERVISOR)
                     ),
             ])
+            // ->recordUrl(fn($record) => \App\Filament\Resources\UserResource::getUrl('view', ['record' => $record]))
+            ->recordUrl(
+                fn($record) => $record->user
+                ? \App\Filament\Resources\UserResource::getUrl('view', ['record' => $record->user])
+                : null
+            )
+
 
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()->label('حذف'),
+                Tables\Actions\Action::make('debug')
+                    ->label('Debug')
+                    ->action(fn($record) => dd($record)),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
+
+    public static function canViewForRecord($ownerRecord, string $pageClass): bool
+{
+    $u = auth()->user();
+    if (!$u) return false;
+
+    if ($u->isSuperAdmin()) return true;
+
+    if ($u->isSupervisor()) {
+        $groupIds = $u->groups()->pluck('groups.id')->toArray();
+        return in_array($ownerRecord->id, $groupIds, true);
+    }
+
+    return false;
+}
+
+public function canCreate(): bool { return auth()->user()?->isSuperAdmin() ?? false; }
+public function canEdit(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()?->isSuperAdmin() ?? false; }
+public function canDelete(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()?->isSuperAdmin() ?? false; }
+
+
+public function isReadOnly(): bool
+{
+    return false;
+}
+
 }
 
