@@ -52,7 +52,7 @@
                     'icon' => 'heroicon-o-sparkles',
                     'color' => 'danger',
                     'url' => \App\Filament\Resources\ActivityResource::getUrl(),
-                    'can' => $u?->isSuperAdmin(),
+                    'can' => $u?->isSuperAdmin() || $u?->isAdmin(),
                 ],
                 [
                     'title' => 'المجموعات',
