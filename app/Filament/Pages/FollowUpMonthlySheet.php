@@ -155,10 +155,11 @@ class FollowUpMonthlySheet extends Page
                         Forms\Components\Select::make('subscriberId')
                             ->label('المشترك')
                             ->preload()
-                            ->options(fn () => $this->subscribersForUser()
-                                ->orderBy('name')
-                                ->pluck('name', 'id')
-                                ->toArray()
+                            ->options(
+                                fn() => $this->subscribersForUser()
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->toArray()
                             )
                             ->required()
                             ->reactive()
@@ -210,7 +211,7 @@ class FollowUpMonthlySheet extends Page
         $current = (int) now()->year;
 
         return collect(range($current - 1, $current + 1))
-            ->mapWithKeys(fn ($y) => [$y => (string) $y])
+            ->mapWithKeys(fn($y) => [$y => (string) $y])
             ->toArray();
     }
 
@@ -602,5 +603,31 @@ class FollowUpMonthlySheet extends Page
             $this->getLauncherBackAction(),
             ...parent::getHeaderActions(),
         ];
+    }
+
+    public function resetSubscriberPeriod(): void
+    {
+        // Safety: Only Super Admins
+        if (!auth()->user()?->isSuperAdmin()) {
+            Notification::make()->title('غير مصرح لك')->danger()->send();
+            return;
+        }
+
+        if (!$this->period) {
+            Notification::make()->title('لا توجد سجلات لهذا الشهر أصلاً')->warning()->send();
+            return;
+        }
+
+        // Delete entries first (foreign key) then the period
+        $this->period->entries()->delete();
+        $this->period->delete();
+
+        // Refresh the page state
+        $this->loadPeriodAndItems();
+
+        Notification::make()
+            ->title('تم مسح بيانات الشهر. سيظهر النموذج الجديد الآن.')
+            ->success()
+            ->send();
     }
 }

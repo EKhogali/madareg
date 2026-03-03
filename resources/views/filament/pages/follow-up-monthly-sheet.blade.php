@@ -123,6 +123,17 @@
                 @endif
             @endif
 
+            @if(auth()->user()?->isSuperAdmin() && $this->period)
+    <x-filament::button 
+        wire:click="resetSubscriberPeriod" 
+        wire:confirm="هل أنت متأكد؟ سيتم حذف جميع إدخالات هذا الشهر لهذا المشترك لتمكين تغيير النموذج."
+        color="danger" 
+        icon="heroicon-o-trash"
+        size="sm">
+        إعادة تعيين الشهر (لتغيير النموذج)
+    </x-filament::button>
+@endif
+
             <div class="text-sm font-semibold {{ $period->is_month_locked ? 'text-danger-600' : 'text-success-600' }}">
                 {{ $period->is_month_locked ? 'الشهر مقفول' : 'الشهر مفتوح' }}
             </div>
