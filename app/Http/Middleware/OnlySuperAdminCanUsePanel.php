@@ -56,6 +56,15 @@ class OnlySuperAdminCanUsePanel
             $allowedPrefixes[] = 'admin/subscribers';
         }
 
+                // ✅ Allow Monitor into these resources
+        if ((int) $user->role === 2) { // monitor
+            $allowedPrefixes[] = 'admin/activities';
+            $allowedPrefixes[] = 'admin/parents';
+            $allowedPrefixes[] = 'admin/subscribers';
+            $allowedPrefixes[] = 'admin/monthly-follow-up-report';
+            $allowedPrefixes[] = 'admin/follow-up-monthly-sheet';
+        }
+
         foreach ($allowedPrefixes as $prefix) {
             if (str_starts_with($path, $prefix)) {
                 return $next($request);
