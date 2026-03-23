@@ -24,7 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 class GroupMembersRelationManager extends RelationManager
 {
     protected static string $relationship = 'subscribers';
-    protected static ?string $title = 'الأعضاء';
+    protected static ?string $title = 'المشتركون';
 
     /**
      * SuperAdmin: always
