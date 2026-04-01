@@ -47,7 +47,8 @@ class ActivityResource extends Resource
                 Select::make('stage_topic_id')
                     ->label('موضوع النشاط')
                     ->relationship('stageTopic', 'category')
-                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->category} - {$record->name}")
+                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name}")
+                    // ->getOptionLabelFromRecordUsing(fn($record) => "{$record->category} - {$record->name}")
                     ->required(),
                 // Select::make('category')
                 //     ->label('تصنيف المنشط')
@@ -70,8 +71,8 @@ class ActivityResource extends Resource
                 Tables\Columns\TextColumn::make('stageTopic.name')
                     ->label('موضوع النشاط'),
 
-                Tables\Columns\TextColumn::make('stageTopic.category')
-                    ->label('الفئة'),
+                // Tables\Columns\TextColumn::make('stageTopic.category')
+                //     ->label('الفئة'),
                 TextColumn::make('from_date')->label('تاريخ بداية المنشط'),
                 TextColumn::make('to_date')->label('تاريخ نهاية المنشط'),
                 TextColumn::make('description')->label('وصف المنشط')->limit(50),
