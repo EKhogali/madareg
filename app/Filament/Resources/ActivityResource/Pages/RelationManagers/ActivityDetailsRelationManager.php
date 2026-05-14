@@ -48,7 +48,7 @@ class ActivityDetailsRelationManager extends RelationManager
                 ->required(),
 
             TextInput::make('evaluation')->label('التقييم')
-                ->numeric()->minValue(1)->maxValue(10)->required(),
+                ->numeric()->minValue(1)->maxValue(30)->required(),
             Textarea::make('notes')->rows(2)->label('ملاحظات'),
         ]);
     }

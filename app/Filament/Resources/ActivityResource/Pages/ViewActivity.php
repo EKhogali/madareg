@@ -34,7 +34,7 @@ class ViewActivity extends ViewRecord
                         ->label('التقييم')
                         ->numeric()
                         ->minValue(1)
-                        ->maxValue(10)
+                        ->maxValue(30)
                         ->required(),
 
                     \Filament\Forms\Components\Textarea::make('notes')
