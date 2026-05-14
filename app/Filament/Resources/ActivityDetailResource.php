@@ -44,7 +44,7 @@ class ActivityDetailResource extends Resource
                 TextInput::make('evaluation')
                     ->numeric()
                     ->minValue(1)
-                    ->maxValue(10)
+                    ->maxValue(30)
                     ->required(),
 
                 Textarea::make('notes'),
