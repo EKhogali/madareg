@@ -48,6 +48,8 @@ class ActivityDetailResource extends Resource
                     ->required(),
 
                 Textarea::make('notes'),
+
+                
             ]);
     }
 
