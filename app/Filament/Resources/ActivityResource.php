@@ -63,6 +63,11 @@ class ActivityResource extends Resource
             ]);
     }
 
+    public static function canDelete($record): bool
+{
+    return auth()->user()?->canManageActivities() ?? false;
+}
+
     public static function table(Table $table): Table
     {
         return $table

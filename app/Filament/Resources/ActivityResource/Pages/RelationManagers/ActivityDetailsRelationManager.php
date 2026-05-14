@@ -81,7 +81,8 @@ class ActivityDetailsRelationManager extends RelationManager
 
 public static function canViewForRecord($ownerRecord, string $pageClass): bool
 {
-    return auth()->user()?->isSuperAdmin() ?? false;
+    // return auth()->user()?->isSuperAdmin() ?? false;
+    return auth()->user()?->canManageActivities() ?? false;
 }
 
 

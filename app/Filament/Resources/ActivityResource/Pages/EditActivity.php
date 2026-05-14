@@ -13,7 +13,25 @@ class EditActivity extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            Actions\DeleteAction::make()
+            ->requiresConfirmation()
+            ->modalHeading('حذف النشاط')
+            ->modalDescription('هذا الإجراء سيحذف النشاط وجميع تفاصيله.')
+            ->modalSubmitActionLabel('حذف')
+            ->form([
+                \Filament\Forms\Components\TextInput::make('confirmation')
+                    ->label('اكتب DELETE للتأكيد')
+                    ->required()
+                    ->rules(['in:DELETE']),
+            ]),
+            // Actions\DeleteAction::make(),
         ];
     }
+
+    public static function canDelete($record): bool
+{
+    return auth()->user()?->canManageActivities() ?? false;
+}
+
+    
 }

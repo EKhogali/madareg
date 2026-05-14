@@ -116,5 +116,10 @@ public function subscribers()
     return $this->hasMany(Subscriber::class);
 }
 
+public function canManageActivities(): bool
+{
+    return in_array((int) $this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR], true);
+}
+
 
 }

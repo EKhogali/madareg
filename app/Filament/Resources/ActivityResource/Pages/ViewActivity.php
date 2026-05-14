@@ -76,6 +76,19 @@ class ViewActivity extends ViewRecord
                     ]);
                 })
                 ->successNotificationTitle('تمت إضافة المشرف ✅'),
+
+                Actions\DeleteAction::make()
+            ->requiresConfirmation()
+            ->modalHeading('حذف النشاط')
+            ->modalDescription('هذا الإجراء سيحذف النشاط وجميع تفاصيله.')
+            ->modalSubmitActionLabel('حذف')
+            ->visible(fn() => auth()->user()?->canManageActivities() ?? false)
+            ->form([
+                \Filament\Forms\Components\TextInput::make('confirmation')
+                    ->label('اكتب DELETE للتأكيد')
+                    ->required()
+                    ->rules(['in:DELETE']),
+            ]),
         ];
     }
 }
