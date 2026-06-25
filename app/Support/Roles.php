@@ -7,9 +7,10 @@ use App\Models\User;
 class Roles
 {
     public const SUPER_ADMIN = 1;
-    public const MONITOR     = 2;
-    public const SUPERVISOR  = 3;
-    public const PARENT      = 4;
+    public const MONITOR = 2;
+    public const SUPERVISOR = 3;
+    public const PARENT = 4;
+    public const SUBSCRIBER = 5;
 
     public static function is(User $user, int $role): bool
     {

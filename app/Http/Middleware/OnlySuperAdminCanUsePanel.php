@@ -48,6 +48,7 @@ class OnlySuperAdminCanUsePanel
             'admin/logout',
             'admin/login',
             'admin/auth',
+            'admin/subscriber-progress',
         ];
 
         // ✅ Allow Supervisors into these resources

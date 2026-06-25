@@ -106,6 +106,7 @@ class UserResource extends Resource
                             2 => 'مراقب (Monitor)',
                             3 => 'مشرف (Supervisor)',
                             4 => 'والد (Parent)',
+                            5 => 'مشترك (Subscriber)',
                         ])
                         ->default(4)
                         ->required(),
@@ -155,6 +156,7 @@ class UserResource extends Resource
                         2 => 'Monitor',
                         3 => 'Supervisor',
                         4 => 'Parent',
+                        5 => 'Subscriber',
                         default => 'Unknown',
                     })
                     ->colors([
@@ -174,10 +176,11 @@ class UserResource extends Resource
                 SelectFilter::make('role')
                     ->label('الدور')
                     ->options([
-                        1 => 'Super Admin',
-                        2 => 'Admin',
-                        3 => 'Supervisor',
-                        4 => 'Member',
+                        1 => 'Super Admin - مدير عام',
+                        2 => 'Admin - مراقب',
+                        3 => 'Supervisor - مشرف',
+                        4 => 'Member - عضو',
+                        5 => 'Subscriber - مشترك',
                     ]),
             ])
             ->actions([
@@ -186,6 +189,28 @@ class UserResource extends Resource
 
                 Tables\Actions\DeleteAction::make()
                     ->visible(fn($record) => (int) $record->role !== User::ROLE_SUPER_ADMIN),
+
+                Tables\Actions\Action::make('viewSubscriber')
+                    ->label('عرض المشترك')
+                    ->icon('heroicon-o-user-circle')
+                    ->color('info')
+                    ->visible(fn($record) => (int) $record->role === 5 && $record->subscriberProfile !== null)
+                    ->url(
+                        fn($record) => $record->subscriberProfile
+                        ? \App\Filament\Resources\SubscriberResource::getUrl('edit', ['record' => $record->subscriberProfile->id])
+                        : null
+                    ),
+
+                Tables\Actions\Action::make('viewParentSubscriber')
+                    ->label('عرض المشترك')
+                    ->icon('heroicon-o-user-circle')
+                    ->color('success')
+                    ->visible(fn($record) => (int) $record->role === 4 && $record->subscriber !== null)
+                    ->url(
+                        fn($record) => $record->subscriber
+                        ? \App\Filament\Resources\SubscriberResource::getUrl('edit', ['record' => $record->subscriber->id])
+                        : null
+                    ),
 
             ])
 

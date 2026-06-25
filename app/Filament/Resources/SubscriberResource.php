@@ -137,8 +137,8 @@ class SubscriberResource extends Resource
                                 ->searchable()
                                 ->preload()
                                 ->options(fn() => static::scopedGroupsOptions())
-                                // ->required()
-                                ,
+                            // ->required()
+                            ,
 
                             DatePicker::make('join_date')
                                 ->label(__('تاريخ الانضمام'))
@@ -259,6 +259,14 @@ class SubscriberResource extends Resource
                                 ->required()
                                 ->default(fn() => auth()->user()?->role === User::ROLE_PARENT ? auth()->id() : null)
                                 ->hidden(fn() => auth()->user()?->role === User::ROLE_PARENT),
+
+                            \Filament\Forms\Components\Placeholder::make('subscriber_user_id')
+                                ->label('حساب المشترك')
+                                ->content(
+                                    fn($record) => $record?->subscriberUser
+                                    ? "✅ مرتبط بـ: {$record->subscriberUser->email}"
+                                    : '❌ لا يوجد حساب مرتبط'
+                                ),
 
                             TextInput::make('father_job')
                                 ->label(__('father_job'))
@@ -586,12 +594,59 @@ class SubscriberResource extends Resource
                         0 => __('no'),
                     ]),
             ])
-            ->recordUrl(fn ($record) => static::getUrl('view', ['record' => $record]))
+            ->recordUrl(fn($record) => static::getUrl('view', ['record' => $record]))
 
             ->actions([
                 Tables\Actions\ViewAction::make()->label(__('View')),
                 Tables\Actions\EditAction::make()->label(__('Edit')),
                 Tables\Actions\DeleteAction::make()->label(__('Delete')),
+                // Action 1: Create account (visible only when no account linked yet)
+                Tables\Actions\Action::make('createSubscriberAccount')
+                    ->label('إنشاء حساب')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('success')
+                    ->visible(fn($record) => $record->subscriber_user_id === null)
+                    ->form([
+                        \Filament\Forms\Components\TextInput::make('email')
+                            ->label('البريد الإلكتروني')
+                            ->email()
+                            ->unique('users', 'email')
+                            ->required(),
+
+                        \Filament\Forms\Components\TextInput::make('password')
+                            ->label('كلمة المرور')
+                            ->password()
+                            ->required()
+                            ->minLength(8),
+                    ])
+                    ->action(function ($record, array $data): void {
+                        $user = \App\Models\User::create([
+                            'name' => $record->name,
+                            'email' => $data['email'],
+                            'password' => bcrypt($data['password']),
+                            'role' => \App\Models\User::ROLE_SUBSCRIBER,
+                            'status' => 1,
+                        ]);
+
+                        $record->update(['subscriber_user_id' => $user->id]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم إنشاء الحساب وربطه بالمشترك')
+                            ->success()
+                            ->send();
+                    }),
+
+                // Action 2: Open linked account (visible only when account already linked)
+                Tables\Actions\Action::make('openSubscriberAccount')
+                    ->label('فتح الحساب')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('info')
+                    ->visible(fn($record) => $record->subscriber_user_id !== null)
+                    ->url(
+                        fn($record) => $record->subscriber_user_id
+                        ? \App\Filament\Resources\UserResource::getUrl('edit', ['record' => $record->subscriber_user_id])
+                        : null
+                    ),
             ])
             ->bulkActions([
                 // Tables\Actions\DeleteBulkAction::make()->label(__('Delete selected')),

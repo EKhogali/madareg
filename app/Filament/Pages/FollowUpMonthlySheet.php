@@ -56,7 +56,7 @@ class FollowUpMonthlySheet extends Page
     public static function canAccess(): bool
     {
         $user = auth()->user();
-        return $user && in_array((int) $user->role, [1, 3, 4], true); // SuperAdmin, Supervisor, Parent
+        return $user && in_array((int) $user->role, [1, 3, 4, 5], true); // SuperAdmin, Supervisor, Parent
     }
 
     public function getTitle(): string
@@ -78,6 +78,12 @@ class FollowUpMonthlySheet extends Page
         if (!$u) {
             return $q->whereRaw('1=0');
         }
+
+        // Subscriber: only their own record
+        if ((int) $u->role === 5) {
+            return $q->where('subscriber_user_id', $u->id);
+        }
+
 
         // Parent: only own subscribers
         if ((int) $u->role === 4) {

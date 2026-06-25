@@ -15,6 +15,7 @@ class User extends Authenticatable
     public const ROLE_MONITOR = 2;
     public const ROLE_SUPERVISOR = 3;
     public const ROLE_PARENT = 4;
+    public const ROLE_SUBSCRIBER = 5;
 
     use HasFactory, Notifiable;
 
@@ -62,20 +63,24 @@ class User extends Authenticatable
         return $this->hasOne(Subscriber::class);
     }
 
+    public function subscriberProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Subscriber::class, 'subscriber_user_id');
+    }
     /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
      */
-  protected function casts(): array
-{
-    return [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'role' => 'integer',
-        'status' => 'integer',
-    ];
-}
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'role' => 'integer',
+            'status' => 'integer',
+        ];
+    }
 
 
     public function groups()
@@ -91,35 +96,47 @@ class User extends Authenticatable
 
 
 
-public function followUpPeriods(): HasMany
-{
-    return $this->hasMany(FollowUpPeriod::class);
-}
+    public function followUpPeriods(): HasMany
+    {
+        return $this->hasMany(FollowUpPeriod::class);
+    }
 
 
 
-public function isSuperAdmin(): bool { return (int) $this->role === self::ROLE_SUPER_ADMIN; }
-public function isAdmin(): bool      { return (int) $this->role === self::ROLE_MONITOR; }
-public function isSupervisor(): bool { return (int) $this->role === self::ROLE_SUPERVISOR; }
-public function isMember(): bool     { return (int) $this->role === self::ROLE_PARENT; }
+    public function isSuperAdmin(): bool
+    {
+        return (int) $this->role === self::ROLE_SUPER_ADMIN;
+    }
+    public function isAdmin(): bool
+    {
+        return (int) $this->role === self::ROLE_MONITOR;
+    }
+    public function isSupervisor(): bool
+    {
+        return (int) $this->role === self::ROLE_SUPERVISOR;
+    }
+    public function isMember(): bool
+    {
+        return (int) $this->role === self::ROLE_PARENT;
+    }
 
 
 
 
-public function isStaff(): bool
-{
-    return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SUPERVISOR], true);
-}
+    public function isStaff(): bool
+    {
+        return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SUPERVISOR], true);
+    }
 
-public function subscribers()
-{
-    return $this->hasMany(Subscriber::class);
-}
+    public function subscribers()
+    {
+        return $this->hasMany(Subscriber::class);
+    }
 
-public function canManageActivities(): bool
-{
-    return in_array((int) $this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR], true);
-}
+    public function canManageActivities(): bool
+    {
+        return in_array((int) $this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR], true);
+    }
 
 
 }

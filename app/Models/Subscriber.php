@@ -52,12 +52,19 @@ class Subscriber extends Model
         'follow_up_template_id',
         'active',
         'locked',
+        'subscriber_user_id'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    public function subscriberUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'subscriber_user_id');
+    }
+
     public function trackDegree()
     {
         return $this->belongsTo(Track_degree::class);
