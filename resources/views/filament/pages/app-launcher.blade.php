@@ -5,14 +5,24 @@
 
     $tiles = [
         [
-            'title'    => 'مسار التقدم',
+            'title'    => 'مضمار المدارج',
+            'subtitle' => 'مضمار الـ 1000 متر',
+            'emoji'    => '🏆',
+            'gradient' => 'from-blue-700 to-blue-900',
+            'glow'     => 'rgba(6,182,212,0.3)',
+            'url'      => \App\Filament\Pages\MadmarTrack::getUrl(),
+            'can'      => true,
+            'featured' => true,
+        ],
+        [
+            'title'    => 'بطاقات المضمار',
             'subtitle' => 'رحلة 1000 نقطة نحو النور',
             'emoji'    => '🌟',
             'gradient' => 'from-amber-400 to-yellow-500',
             'glow'     => 'rgba(251,191,36,0.35)',
             'url'      => \App\Filament\Pages\SubscriberProgress::getUrl(),
             'can'      => true,
-            'featured' => true,
+            'special'  => true,
         ],
         [
             'title'    => 'المتابعة الشهرية',
@@ -394,6 +404,71 @@
         .hero-name { font-size: 1.4rem; }
     }
 
+    /* ── Special tile (بطاقات المضمار) ── */
+    .launcher-tile.special {
+        background: linear-gradient(160deg, #FEF9EC 0%, #FEF3C7 60%, #FDE68A 100%);
+        border: 2px solid #F4A623;
+        box-shadow: 0 8px 28px rgba(251,191,36,0.25);
+        flex-direction: column;
+        padding: 1.75rem 1.25rem;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 140px;
+    }
+    .launcher-tile.special:hover {
+        transform: none !important;
+        box-shadow: 0 16px 40px rgba(251,191,36,0.45) !important;
+        border-color: #D97706;
+        animation: tile-shake 0.5s ease-in-out infinite !important;
+    }
+    @keyframes tile-shake {
+        0%,100% { transform: translateY(-3px) rotate(0deg); }
+        20%      { transform: translateY(-3px) rotate(-2.5deg); }
+        40%      { transform: translateY(-4px) rotate(2.5deg); }
+        60%      { transform: translateY(-3px) rotate(-1.5deg); }
+        80%      { transform: translateY(-4px) rotate(1.5deg); }
+    }
+    .launcher-tile.special::before { display:none; }
+    .launcher-tile.special::after  { display:none; }
+
+    /* Pulsing star icon */
+    .launcher-tile.special .tile-emoji {
+        font-size: 2.6rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        animation: special-pulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 8px rgba(251,191,36,0.8));
+    }
+    @keyframes special-pulse {
+        0%,100% { transform: scale(1);    filter: drop-shadow(0 0 6px rgba(251,191,36,0.6)); }
+        50%      { transform: scale(1.15); filter: drop-shadow(0 0 14px rgba(251,191,36,1)); }
+    }
+    .launcher-tile.special .tile-title {
+        font-size: 1.05rem;
+        color: #92400E;
+        font-weight: 900;
+    }
+    .launcher-tile.special .tile-subtitle {
+        color: #B45309;
+        font-size: 0.72rem;
+    }
+
+    /* Decorative top shimmer line */
+    .launcher-tile.special::before {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #F4A623, transparent);
+        animation: shimmer-line 2.5s ease-in-out infinite;
+    }
+    @keyframes shimmer-line {
+        0%,100% { opacity: 0.4; }
+        50%      { opacity: 1; }
+    }
+
     /* dark mode */
     .dark .launcher-tile {
         background: #1E293B;
@@ -434,10 +509,17 @@
             $delayMs = 60 + ($index * 55);
             $isFeatured = $tile['featured'] ?? false;
         @endphp
+        @php
+            $isSpecial  = $tile['special'] ?? false;
+            $tileClass  = $isFeatured ? 'featured' : ($isSpecial ? 'special' : '');
+            $tileGrad   = $isFeatured
+                ? 'linear-gradient(135deg,#0076BF,#00A8E8)'
+                : "linear-gradient(135deg,{$tile['gradient']})";
+        @endphp
         <a href="{{ $tile['url'] }}"
-           class="launcher-tile {{ $isFeatured ? 'featured' : '' }}"
+           class="launcher-tile {{ $tileClass }}"
            style="
-               --tile-gradient: {{ $isFeatured ? 'linear-gradient(135deg,#0076BF,#00A8E8)' : "linear-gradient(135deg,{$tile['gradient']})" }};
+               --tile-gradient: {{ $tileGrad }};
                --tile-glow: {{ $tile['glow'] }};
                animation-delay: {{ $delayMs }}ms;
            ">
@@ -449,6 +531,12 @@
                     <span class="tile-subtitle">{{ $tile['subtitle'] }}</span>
                 </div>
                 <div class="featured-arrow">←</div>
+            @elseif($isSpecial)
+                <span class="tile-emoji">{{ $tile['emoji'] }}</span>
+                <div class="tile-text">
+                    <span class="tile-title">{{ $tile['title'] }}</span>
+                    <span class="tile-subtitle">{{ $tile['subtitle'] }}</span>
+                </div>
             @else
                 <span class="tile-emoji">{{ $tile['emoji'] }}</span>
                 <div class="tile-text">

@@ -109,7 +109,7 @@ class SubscriberProgress extends Page
         $subscribers = $query->orderByDesc('track_degree_id')->get();
 
         $this->progressData = $subscribers->map(function (Subscriber $s) {
-            $points = (int) ($s->track_degree_id ?? 0);
+            $points = (int) ($s->total_points ?? 0);
             $pct    = min(100, round(($points / 1000) * 100, 1));
 
             // Current stage

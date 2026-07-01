@@ -49,6 +49,7 @@ class OnlySuperAdminCanUsePanel
             'admin/login',
             'admin/auth',
             'admin/subscriber-progress',
+            'admin/madmar-track',
         ];
 
         // ✅ Allow Supervisors into these resources
