@@ -11,7 +11,8 @@
             'gradient' => 'from-blue-700 to-blue-900',
             'glow'     => 'rgba(6,182,212,0.3)',
             'url'      => \App\Filament\Pages\MadmarTrack::getUrl(),
-            'can'      => true,
+            // 'can'      => true,
+            'can'      => $u?->isSuperAdmin(),
             'featured' => true,
         ],
         [
@@ -21,7 +22,8 @@
             'gradient' => 'from-amber-400 to-yellow-500',
             'glow'     => 'rgba(251,191,36,0.35)',
             'url'      => \App\Filament\Pages\SubscriberProgress::getUrl(),
-            'can'      => true,
+            // 'can'      => true,
+            'can'      => $u?->isSuperAdmin(),
             'special'  => true,
         ],
         [
