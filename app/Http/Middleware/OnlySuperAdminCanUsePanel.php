@@ -50,6 +50,7 @@ class OnlySuperAdminCanUsePanel
             'admin/auth',
             'admin/subscriber-progress',
             'admin/madmar-track',
+            'admin/supervisor-progress',
         ];
 
         // ✅ Allow Supervisors into these resources
@@ -65,6 +66,7 @@ class OnlySuperAdminCanUsePanel
             $allowedPrefixes[] = 'admin/subscribers';
             $allowedPrefixes[] = 'admin/monthly-follow-up-report';
             $allowedPrefixes[] = 'admin/follow-up-monthly-sheet';
+            
         }
 
         foreach ($allowedPrefixes as $prefix) {

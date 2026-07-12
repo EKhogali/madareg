@@ -11,6 +11,8 @@ class SupervisorActivityDetail extends Model
         'activity_id',
         'supervisor_id',
         'activity_role',
+        'evaluation',
+        'notes',
     ];
 
     public function activity(): BelongsTo

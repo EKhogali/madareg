@@ -4,16 +4,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
 
 :root {
-    --road-bg:    #2D2D2D;
-    --gold:       #F4A623;
-    --blue:       #0076BF;
-    --navy:       #1A2B4A;
-    --cyan:       #00BCD4;
-    --stage-1:    #3B82F6;
-    --stage-2:    #8B5CF6;
-    --stage-3:    #F59E0B;
-    --stage-4:    #EF4444;
-    --stage-5:    #10B981;
+    --road-bg:  #2D2D2D;
+    --gold:     #F4A623;
+    --blue:     #0076BF;
+    --navy:     #1A2B4A;
+    --cyan:     #00BCD4;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -57,47 +52,6 @@
 .hero-stat strong { display:block; color:var(--gold); font-size:1.9rem; font-weight:900; line-height:1; }
 .hero-stat span   { color:rgba(255,255,255,0.65); font-size:0.72rem; }
 
-/* ══════════════════════════════
-   STAGE ZOOM BUTTONS
-══════════════════════════════ */
-.stage-zoom-bar {
-    display:flex; gap:0.5rem; flex-wrap:wrap;
-    margin-bottom:1.25rem; align-items:center;
-}
-.stage-zoom-btn {
-    display:flex; align-items:center; gap:0.35rem;
-    padding:0.38rem 1.05rem;
-    border-radius:2rem; font-size:0.82rem; font-weight:700;
-    color:white; border:2.5px solid rgba(255,255,255,0.3);
-    cursor:pointer;
-    box-shadow:0 2px 8px rgba(0,0,0,0.12);
-    transition:transform 0.22s ease, box-shadow 0.22s ease,
-               border-color 0.22s ease, opacity 0.22s ease;
-    user-select:none; font-family:inherit;
-}
-.stage-zoom-btn:hover {
-    transform:translateY(-2px);
-    box-shadow:0 5px 16px rgba(0,0,0,0.2);
-    border-color:white;
-}
-.stage-zoom-btn.active {
-    border-color:white;
-    box-shadow:0 0 0 3px rgba(255,255,255,0.5), 0 6px 24px rgba(0,0,0,0.25);
-    transform:translateY(-2px) scale(1.07);
-}
-.stage-reset-btn {
-    display:none; align-items:center; gap:0.35rem;
-    padding:0.38rem 1.05rem;
-    border-radius:2rem; font-size:0.82rem; font-weight:700;
-    color:#475569; background:white;
-    border:2px solid #E2E8F0;
-    cursor:pointer;
-    box-shadow:0 2px 8px rgba(0,0,0,0.06);
-    transition:all 0.2s ease; font-family:inherit;
-}
-.stage-reset-btn:hover { border-color:#94A3B8; transform:translateY(-1px); }
-.stage-reset-btn.visible { display:flex; }
-
 /* ── Filter ── */
 .filter-bar {
     background:white; border-radius:1rem;
@@ -114,14 +68,8 @@
 }
 .filter-bar select:focus { border-color:var(--blue); }
 
-/* ── Track scroll + zoom wrapper ── */
+/* ── Track scroll ── */
 .track-scroll { overflow-x:auto; padding-bottom:1rem; }
-
-.track-zoom-wrapper {
-    transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
-    transform-origin: center top;
-    will-change: transform;
-}
 
 /* ── Road segment ── */
 .road-segment {
@@ -129,7 +77,6 @@
     background:var(--road-bg);
     border-radius:28px;
     box-shadow:0 4px 18px rgba(0,0,0,0.22);
-    transition: opacity 0.4s ease;
 }
 .road-segment::after {
     content:'';
@@ -152,44 +99,6 @@
         transparent 18px, transparent 32px
     );
 }
-
-/* ── Stage color overlays ── */
-.road-overlay {
-    position:absolute; border-radius:28px;
-    opacity:0.18; pointer-events:none; z-index:1;
-    transition: opacity 0.4s ease;
-}
-
-/* ── Spotlight glow border around active stage area ── */
-.stage-spotlight {
-    position:absolute; border-radius:32px;
-    pointer-events:none; z-index:3;
-    opacity:0; border:3px solid transparent;
-    transition: opacity 0.4s ease, box-shadow 0.4s ease;
-}
-.stage-spotlight.lit {
-    opacity:1;
-}
-
-/* ── Dimming non-active milestones/clusters ── */
-.milestone-pin, .sub-cluster {
-    transition: opacity 0.4s ease, filter 0.4s ease;
-}
-.track-zoom-wrapper.has-focus .milestone-pin.dimmed,
-.track-zoom-wrapper.has-focus .sub-cluster.dimmed {
-    opacity: 0.15;
-    filter: grayscale(90%) blur(0.5px);
-}
-.track-zoom-wrapper.has-focus .milestone-pin.lit,
-.track-zoom-wrapper.has-focus .sub-cluster.lit {
-    opacity: 1; filter: none;
-}
-.track-zoom-wrapper.has-focus .road-segment.dimmed,
-.track-zoom-wrapper.has-focus .road-overlay.dimmed {
-    opacity: 0.25;
-}
-.track-zoom-wrapper.has-focus .road-segment.lit { opacity:1; }
-.track-zoom-wrapper.has-focus .road-overlay.lit { opacity:0.35; }
 
 /* ── Milestone pin ── */
 .milestone-pin {
@@ -220,62 +129,220 @@
     padding:0.3rem 0.85rem; font-size:0.85rem; font-weight:900;
     z-index:12; transform:translate(-50%,-50%);
     box-shadow:0 2px 10px rgba(0,0,0,0.2);
-    transition: opacity 0.4s ease;
 }
 .start-marker  { background:#EF4444; color:white; }
 .finish-marker { background:var(--gold); color:white; font-size:1rem; }
-.finish-trophy { font-size:2rem; position:absolute; z-index:13; transform:translate(-50%,-50%); transition: opacity 0.4s ease; }
+.finish-trophy { font-size:2rem; position:absolute; z-index:13; transform:translate(-50%,-50%); }
 
 /* ══════════════════════════════
-   SUBSCRIBER CLUSTER + HOVER CARD
+   SUBSCRIBER CLUSTER
 ══════════════════════════════ */
 .sub-cluster {
     position:absolute; display:flex; flex-wrap:wrap; gap:3px;
     z-index:20; transform:translate(-50%,-50%);
     max-width:90px; justify-content:center;
 }
+
 .sub-avatar {
     position:relative; width:34px; height:34px;
-    border-radius:50%;
-    cursor:pointer; flex-shrink:0;
-    transition:transform 0.2s ease;
-    /* overflow:visible so hover-card is not clipped */
-    overflow:visible;
+    border-radius:50%; cursor:pointer; flex-shrink:0;
+    transition:transform 0.2s ease; overflow:visible;
 }
 .sub-avatar:hover { transform:scale(1.3); z-index:100; }
 
-/* Inner circle: clips the image, shows initials behind */
 .sub-avatar-inner {
     position:absolute; top:0; left:0;
-    width:100%; height:100%;
-    border-radius:50%;
+    width:100%; height:100%; border-radius:50%;
     border:2.5px solid white;
     box-shadow:0 2px 6px rgba(0,0,0,0.22);
     display:flex; align-items:center; justify-content:center;
     font-size:0.75rem; font-weight:800; color:white;
-    overflow:hidden; /* clips the image inside the circle */
-    background:inherit;
+    overflow:hidden; background:inherit;
 }
 .sub-avatar-inner img {
-    width:100%; height:100%;
-    object-fit:cover; border-radius:50%;
-    display:block;
-}
-.sub-count-badge {
-    width:34px; height:34px; border-radius:50%;
-    background:var(--navy); color:white; border:2px solid white;
-    display:flex; align-items:center; justify-content:center;
-    font-size:0.65rem; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,0.22);
-    flex-shrink:0;
+    width:100%; height:100%; object-fit:cover;
+    border-radius:50%; display:block;
 }
 
-/* ── Hover card ── */
+/* ── +N expandable badge ── */
+.sub-more-badge {
+    width:34px; height:34px; border-radius:50%;
+    background:var(--navy); color:white;
+    border:2.5px solid white;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.62rem; font-weight:800;
+    box-shadow:0 2px 6px rgba(0,0,0,0.22);
+    flex-shrink:0; cursor:pointer;
+    transition:transform 0.2s ease, background 0.2s ease;
+    position:relative;
+}
+.sub-more-badge:hover { transform:scale(1.15); background:var(--blue); }
+
+/* ── Expanded popup panel ── */
+.expanded-popup {
+    display:none;
+    /* Fixed to viewport so it's always in front and responsive */
+    position:fixed;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    background:white;
+    border-radius:1.25rem;
+    box-shadow:0 24px 80px rgba(0,0,0,0.35);
+    padding:0;
+    z-index:99999;
+    border:1.5px solid #E2E8F0;
+    width:min(520px, 90vw);
+    max-height:80vh;
+    overflow:hidden;
+    animation:popup-in 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popup-in {
+    from { opacity:0; transform:translate(-50%,-50%) scale(0.88); }
+    to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
+}
+.expanded-popup.open { display:block; }
+
+/* Backdrop overlay */
+.popup-backdrop {
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.45);
+    z-index:99998;
+    backdrop-filter:blur(3px);
+    animation:fade-in 0.2s ease;
+}
+@keyframes fade-in { from{opacity:0} to{opacity:1} }
+.popup-backdrop.open { display:block; }
+
+.popup-header {
+    font-size:0.9rem; font-weight:900; color:var(--navy);
+    padding:1rem 1.25rem 0.85rem;
+    border-bottom:1px solid #F1F5F9;
+    display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(135deg, #F8FAFC, #EFF6FF);
+    border-radius:1.25rem 1.25rem 0 0;
+    position:sticky; top:0; z-index:1;
+}
+.popup-header-left { display:flex; flex-direction:column; gap:0.15rem; }
+.popup-header-title { font-size:1rem; font-weight:900; color:var(--navy); }
+.popup-header-sub   { font-size:0.72rem; color:#64748B; }
+.popup-close {
+    cursor:pointer; color:#94A3B8;
+    font-size:1.2rem; line-height:1;
+    width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%; transition:all 0.15s;
+    background:#F1F5F9;
+}
+.popup-close:hover { color:white; background:#EF4444; }
+
+.popup-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap:0.85rem;
+    padding:1rem 1.25rem 1.25rem;
+    overflow-y:auto;
+    max-height:calc(80vh - 70px);
+}
+.popup-item {
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    cursor:pointer;
+    padding:0.6rem 0.4rem;
+    border-radius:0.75rem;
+    transition:background 0.15s, transform 0.15s;
+    position:relative;
+}
+.popup-item:hover { background:#F0F9FF; transform:translateY(-2px); }
+.popup-item:hover .popup-item-tooltip { display:block; }
+
+/* Tooltip on popup avatar hover */
+.popup-item-tooltip {
+    display:none;
+    position:absolute;
+    bottom:calc(100% + 6px);
+    left:50%; transform:translateX(-50%);
+    background:var(--navy);
+    color:white;
+    font-size:0.65rem;
+    font-weight:700;
+    padding:0.3rem 0.6rem;
+    border-radius:0.4rem;
+    white-space:nowrap;
+    z-index:10;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    pointer-events:none;
+}
+.popup-item-tooltip::after {
+    content:'';
+    position:absolute;
+    top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent;
+    border-top-color:var(--navy);
+}
+
+/* Detail side panel inside popup */
+.popup-detail-panel {
+    display:none;
+    border-top:1px solid #F1F5F9;
+    padding:0.85rem 1.25rem;
+    background:#F8FAFC;
+    animation:slide-up 0.2s ease;
+}
+@keyframes slide-up {
+    from { opacity:0; transform:translateY(6px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+.popup-detail-panel.open { display:block; }
+.popup-detail-top {
+    display:flex; align-items:center; gap:0.75rem;
+    margin-bottom:0.75rem;
+}
+.popup-detail-avatar {
+    width:48px; height:48px; border-radius:50%;
+    border:3px solid white; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; font-weight:800; color:white;
+    box-shadow:0 3px 10px rgba(0,0,0,0.18); flex-shrink:0;
+}
+.popup-detail-avatar img { width:100%; height:100%; object-fit:cover; }
+.popup-detail-name  { font-size:0.9rem; font-weight:900; color:var(--navy); }
+.popup-detail-group { font-size:0.72rem; color:#94A3B8; }
+.popup-detail-rows  { display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 1rem; }
+.popup-detail-row   { display:flex; flex-direction:column; gap:1px; }
+.popup-detail-lbl   { font-size:0.62rem; color:#94A3B8; }
+.popup-detail-val   { font-size:0.75rem; font-weight:700; color:var(--navy); }
+.popup-detail-bar   { margin-top:0.6rem; background:#E2E8F0; border-radius:999px; height:6px; overflow:hidden; }
+.popup-detail-fill  { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--blue),#00A8E8); }
+.popup-detail-pct   { text-align:center; font-size:0.65rem; color:#94A3B8; margin-top:3px; }
+.popup-detail-close { float:left; cursor:pointer; font-size:0.7rem; color:#94A3B8; margin-top:-1.5rem; }
+.popup-detail-close:hover { color:var(--navy); }
+
+.popup-avatar {
+    width:52px; height:52px; border-radius:50%;
+    border:3px solid white; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; font-weight:800; color:white;
+    box-shadow:0 3px 10px rgba(0,0,0,0.18);
+    flex-shrink:0;
+}
+.popup-avatar img { width:100%; height:100%; object-fit:cover; }
+.popup-name {
+    font-size:0.68rem; color:var(--navy); font-weight:700;
+    text-align:center; line-height:1.3;
+    width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.popup-pts {
+    font-size:0.65rem; color:var(--blue); font-weight:800;
+    background:#EFF6FF; border-radius:999px; padding:0.1rem 0.5rem;
+}
+
+/* ── Hover card on individual avatars ── */
 .hover-card {
     display:none; position:absolute;
     bottom:calc(100% + 10px); left:50%; transform:translateX(-50%);
-    width:180px; background:white; border-radius:0.85rem;
+    width:185px; background:white; border-radius:0.85rem;
     box-shadow:0 8px 28px rgba(0,0,0,0.18);
-    padding:0.75rem; z-index:200; pointer-events:none;
+    padding:0.75rem; z-index:300; pointer-events:none;
     border:1.5px solid #F1F5F9;
     animation:card-pop 0.15s ease;
 }
@@ -289,21 +356,20 @@
     margin-bottom:0.5rem; padding-bottom:0.5rem;
     border-bottom:1px solid #F1F5F9;
 }
-.hover-avatar {
+.hover-ha {
     width:36px; height:36px; border-radius:50%;
-    object-fit:cover; flex-shrink:0;
-    border:2px solid #E2E8F0;
+    flex-shrink:0; border:2px solid #E2E8F0;
     display:flex; align-items:center; justify-content:center;
     font-size:0.9rem; font-weight:800; color:white; overflow:hidden;
 }
-.hover-avatar img { width:100%; height:100%; object-fit:cover; }
-.hover-name { font-size:0.78rem; font-weight:800; color:var(--navy); line-height:1.2; }
+.hover-ha img { width:100%; height:100%; object-fit:cover; }
+.hover-name  { font-size:0.78rem; font-weight:800; color:var(--navy); line-height:1.2; }
 .hover-group { font-size:0.65rem; color:#94A3B8; }
-.hover-row { display:flex; justify-content:space-between; font-size:0.68rem; margin-bottom:0.2rem; }
+.hover-row   { display:flex; justify-content:space-between; font-size:0.68rem; margin-bottom:0.2rem; }
 .hover-row .lbl { color:#94A3B8; }
 .hover-row .val { color:var(--navy); font-weight:700; }
-.hover-pts-bar { margin-top:0.45rem; background:#F1F5F9; border-radius:999px; height:5px; overflow:hidden; }
-.hover-pts-fill { height:100%; border-radius:999px; }
+.hover-bar  { margin-top:0.45rem; background:#F1F5F9; border-radius:999px; height:5px; overflow:hidden; }
+.hover-fill { height:100%; border-radius:999px; background:var(--blue); }
 
 /* ── Legend ── */
 .legend-bar {
@@ -314,7 +380,7 @@
 }
 .legend-bar h4 { font-weight:800; color:var(--navy); font-size:0.9rem; margin:0 0 0.5rem; width:100%; }
 .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:#475569; }
-.legend-dot  { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.legend-dot  { width:12px; height:12px; border-radius:50%; background:var(--gold); flex-shrink:0; }
 .legend-cnt  { background:#E0F2FE; color:#0369A1; border-radius:999px; padding:0 6px; font-size:0.7rem; font-weight:800; }
 
 /* ── Empty ── */
@@ -335,19 +401,6 @@
     $total     = count($subs);
 
     $byMilestone = collect($subs)->groupBy('milestone')->toArray();
-
-    $milestoneStageColor = [
-        1 => '#3B82F6', 2 => '#3B82F6',
-        3 => '#8B5CF6', 4 => '#8B5CF6',
-        5 => '#F59E0B', 6 => '#F59E0B',
-        7 => '#EF4444', 8 => '#EF4444',
-        9 => '#10B981', 10 => '#10B981',
-    ];
-
-    // milestone id → stage id (1-5)
-    $milestoneStageId = [
-        1=>1,2=>1, 3=>2,4=>2, 5=>3,6=>3, 7=>4,8=>4, 9=>5,10=>5
-    ];
 
     $rh = 56; $rw = 56;
     $y4 = 100; $y3 = 260; $y2 = 420; $y1 = 580;
@@ -380,29 +433,12 @@
     ];
 
     $canvasH    = 700;
-    $maxVisible = 8;
+    $maxVisible = 6;
 
     $avatarColors = [
         '#0076BF','#F59E0B','#10B981','#8B5CF6',
         '#EF4444','#EC4899','#06B6D4','#84CC16',
-    ];
-
-    $stageLabels = [
-        1 => ['بصيص','✨','#3B82F6'],
-        2 => ['بريق','⚡','#8B5CF6'],
-        3 => ['ضياء','🌟','#F59E0B'],
-        4 => ['وميض','🔥','#EF4444'],
-        5 => ['نور','☀️','#10B981'],
-    ];
-
-    // Stage → which road rows/areas to spotlight
-    // Each stage maps to: [row_segments, milestone_ids]
-    $stageAreas = [
-        1 => ['rows' => ['row1-left'],         'milestones' => [1,2]],
-        2 => ['rows' => ['row1-right','row2-left'], 'milestones' => [3,4]],
-        3 => ['rows' => ['row2-right'],        'milestones' => [5,6]],
-        4 => ['rows' => ['row3'],              'milestones' => [7,8]],
-        5 => ['rows' => ['row4'],              'milestones' => [9,10]],
+        '#F97316','#6366F1','#14B8A6','#A855F7',
     ];
 @endphp
 
@@ -421,23 +457,6 @@
         </div>
     </div>
 
-    {{-- Stage zoom buttons --}}
-    <div class="stage-zoom-bar">
-        @foreach($stageLabels as $sid => [$sname, $semoji, $scolor])
-        <button class="stage-zoom-btn"
-                id="zoom-btn-{{ $sid }}"
-                style="background:{{ $scolor }}"
-                onclick="zoomStage({{ $sid }})">
-            {{ $semoji }} {{ $sname }}
-            <small style="opacity:0.75;font-weight:600">{{ ($sid-1)*200+1 }}–{{ $sid*200 }}</small>
-        </button>
-        @endforeach
-
-        <button class="stage-reset-btn" id="zoom-reset" onclick="zoomReset()">
-            ↩ عرض الكل
-        </button>
-    </div>
-
     {{-- Filter --}}
     @if($role !== 4 && $role !== 5 && count($groupOpts) > 0)
     <div class="filter-bar">
@@ -452,88 +471,30 @@
     @endif
 
     {{-- Track --}}
-    <div class="track-scroll" id="track-scroll-container">
-    <div id="track-zoom-wrapper" class="track-zoom-wrapper"
-         style="position:relative;width:680px;height:{{ $canvasH }}px;margin:0 auto;min-width:680px;">
+    <div class="track-scroll">
+    <div style="position:relative;width:680px;height:{{ $canvasH }}px;margin:0 auto;min-width:680px;">
 
-        {{-- ══ ROAD SEGMENTS (with data-stage attributes) ══ --}}
-
-        {{-- Row 1 bottom --}}
-        <div class="road-segment" data-row="row1"
+        {{-- ══ ROAD SEGMENTS ══ --}}
+        <div class="road-segment"
              style="left:{{ $xL }}px;top:{{ $y1-$rh/2 }}px;width:{{ $xR-$xL }}px;height:{{ $rh }}px;"></div>
 
-        <div class="road-overlay" data-row="row1-left"
-             style="left:{{ $xL }}px;top:{{ $y1-$rh/2 }}px;width:{{ ($xR-$xL)*0.5 }}px;height:{{ $rh }}px;background:#3B82F6;z-index:1;"></div>
-        <div class="road-overlay" data-row="row1-right"
-             style="left:{{ $xL+($xR-$xL)*0.5 }}px;top:{{ $y1-$rh/2 }}px;width:{{ ($xR-$xL)*0.5 }}px;height:{{ $rh }}px;background:#8B5CF6;z-index:1;"></div>
-
-        {{-- Connector R --}}
-        <div class="road-segment vertical" data-row="connector-r1"
+        <div class="road-segment vertical"
              style="left:{{ $xR-$rw/2 }}px;top:{{ $y2-$rh/2 }}px;width:{{ $rw }}px;height:{{ $y1-$y2+$rh }}px;"></div>
 
-        {{-- Row 2 --}}
-        <div class="road-segment" data-row="row2"
+        <div class="road-segment"
              style="left:{{ $xL }}px;top:{{ $y2-$rh/2 }}px;width:{{ $xR-$xL }}px;height:{{ $rh }}px;"></div>
-        <div class="road-overlay" data-row="row2-left"
-             style="left:{{ $xL }}px;top:{{ $y2-$rh/2 }}px;width:{{ ($xR-$xL)*0.5 }}px;height:{{ $rh }}px;background:#8B5CF6;z-index:1;"></div>
-        <div class="road-overlay" data-row="row2-right"
-             style="left:{{ $xL+($xR-$xL)*0.5 }}px;top:{{ $y2-$rh/2 }}px;width:{{ ($xR-$xL)*0.5 }}px;height:{{ $rh }}px;background:#F59E0B;z-index:1;"></div>
 
-        {{-- Connector L --}}
-        <div class="road-segment vertical" data-row="connector-l"
+        <div class="road-segment vertical"
              style="left:{{ $xL-$rw/2+28 }}px;top:{{ $y3-$rh/2 }}px;width:{{ $rw }}px;height:{{ $y2-$y3+$rh }}px;"></div>
 
-        {{-- Row 3 --}}
-        <div class="road-segment" data-row="row3"
+        <div class="road-segment"
              style="left:{{ $xL }}px;top:{{ $y3-$rh/2 }}px;width:{{ $xR-$xL }}px;height:{{ $rh }}px;"></div>
-        <div class="road-overlay" data-row="row3"
-             style="left:{{ $xL }}px;top:{{ $y3-$rh/2 }}px;width:{{ $xR-$xL }}px;height:{{ $rh }}px;background:#EF4444;z-index:1;"></div>
 
-        {{-- Connector R2 --}}
-        <div class="road-segment vertical" data-row="connector-r2"
+        <div class="road-segment vertical"
              style="left:{{ $xR-$rw/2 }}px;top:{{ $y4-$rh/2 }}px;width:{{ $rw }}px;height:{{ $y3-$y4+$rh }}px;"></div>
 
-        {{-- Row 4 top --}}
-        <div class="road-segment" data-row="row4"
+        <div class="road-segment"
              style="left:{{ $xL+100 }}px;top:{{ $y4-$rh/2 }}px;width:{{ $xR-$xL-100 }}px;height:{{ $rh }}px;"></div>
-        <div class="road-overlay" data-row="row4"
-             style="left:{{ $xL+100 }}px;top:{{ $y4-$rh/2 }}px;width:{{ $xR-$xL-100 }}px;height:{{ $rh }}px;background:#10B981;z-index:1;"></div>
-
-        {{-- ══ SPOTLIGHT OVERLAYS (one per stage, hidden by default) ══ --}}
-        {{-- Stage 1: row1 left half --}}
-        <div class="stage-spotlight" id="spotlight-1"
-             style="left:{{ $xL-4 }}px;top:{{ $y1-$rh/2-4 }}px;
-                    width:{{ ($xR-$xL)*0.5+8 }}px;height:{{ $rh+8 }}px;
-                    border:3px solid #3B82F6;
-                    box-shadow:0 0 0 3px #3B82F688, 0 0 30px #3B82F655;"></div>
-
-        {{-- Stage 2: row1 right + row2 left --}}
-        <div class="stage-spotlight" id="spotlight-2"
-             style="left:{{ $xL+($xR-$xL)*0.5-4 }}px;top:{{ $y2-$rh/2-4 }}px;
-                    width:{{ ($xR-$xL)*0.5+8+$rw }}px;height:{{ $y1-$y2+$rh+8 }}px;
-                    border:3px solid #8B5CF6;
-                    box-shadow:0 0 0 3px #8B5CF688, 0 0 30px #8B5CF655;"></div>
-
-        {{-- Stage 3: row2 right half --}}
-        <div class="stage-spotlight" id="spotlight-3"
-             style="left:{{ $xL+($xR-$xL)*0.5-4 }}px;top:{{ $y2-$rh/2-4 }}px;
-                    width:{{ ($xR-$xL)*0.5+8 }}px;height:{{ $rh+8 }}px;
-                    border:3px solid #F59E0B;
-                    box-shadow:0 0 0 3px #F59E0B88, 0 0 30px #F59E0B55;"></div>
-
-        {{-- Stage 4: row3 --}}
-        <div class="stage-spotlight" id="spotlight-4"
-             style="left:{{ $xL-4 }}px;top:{{ $y3-$rh/2-4 }}px;
-                    width:{{ $xR-$xL+8 }}px;height:{{ $rh+8 }}px;
-                    border:3px solid #EF4444;
-                    box-shadow:0 0 0 3px #EF444488, 0 0 30px #EF444455;"></div>
-
-        {{-- Stage 5: row4 --}}
-        <div class="stage-spotlight" id="spotlight-5"
-             style="left:{{ $xL+100-4 }}px;top:{{ $y4-$rh/2-4 }}px;
-                    width:{{ $xR-$xL-100+8 }}px;height:{{ $rh+8 }}px;
-                    border:3px solid #10B981;
-                    box-shadow:0 0 0 3px #10B98188, 0 0 30px #10B98155;"></div>
 
         {{-- ══ START / FINISH ══ --}}
         <div class="start-marker" style="left:{{ $xL+10 }}px;top:{{ $y1 }}px;">الانطلاق 🚦</div>
@@ -543,53 +504,46 @@
         {{-- ══ MILESTONES + SUBSCRIBER CLUSTERS ══ --}}
         @foreach($this->milestones as $m)
         @php
-            $mx  = $mPos[$m['id']]['x'];
-            $my  = $mPos[$m['id']]['y'];
-            $odx = $clusterOffsets[$m['id']]['dx'];
-            $ody = $clusterOffsets[$m['id']]['dy'];
-
+            $mx       = $mPos[$m['id']]['x'];
+            $my       = $mPos[$m['id']]['y'];
+            $odx      = $clusterOffsets[$m['id']]['dx'];
+            $ody      = $clusterOffsets[$m['id']]['dy'];
             $subsHere = $byMilestone[$m['id']] ?? [];
             $subCount = count($subsHere);
             $visible  = array_slice($subsHere, 0, $maxVisible);
-            $extra    = $subCount - count($visible);
-
-            $stageColor = $milestoneStageColor[$m['id']] ?? '#0076BF';
-            $stageId    = $milestoneStageId[$m['id']] ?? 1;
+            $hidden   = array_slice($subsHere, $maxVisible);
+            $extra    = count($hidden);
+            $popupId  = 'popup-m' . $m['id'];
         @endphp
 
         {{-- Milestone pin --}}
-        <div class="milestone-pin"
-             data-stage="{{ $stageId }}"
-             style="left:{{ $mx }}px;top:{{ $my }}px;z-index:15;">
-            <div class="milestone-dot" style="background:{{ $stageColor }}">📍</div>
-            <div class="milestone-label" style="background:{{ $stageColor }}">{{ $m['label'] }}</div>
+        <div class="milestone-pin" style="left:{{ $mx }}px;top:{{ $my }}px;z-index:15;">
+            <div class="milestone-dot">📍</div>
+            <div class="milestone-label">{{ $m['label'] }}</div>
             <div class="milestone-title">{{ $m['title'] }}</div>
         </div>
 
         {{-- Subscriber cluster --}}
         @if($subCount > 0)
-        <div class="sub-cluster"
-             data-stage="{{ $stageId }}"
-             style="left:{{ $mx+$odx }}px;top:{{ $my+$ody }}px;">
+        <div class="sub-cluster" style="left:{{ $mx+$odx }}px;top:{{ $my+$ody }}px;">
+
+            {{-- Visible avatars --}}
             @foreach($visible as $vi => $sub)
             @php $bgColor = $avatarColors[$vi % count($avatarColors)]; @endphp
             <div class="sub-avatar" style="z-index:{{ 20+$vi }}">
-                {{-- Inner circle: clips image, shows initials --}}
                 <div class="sub-avatar-inner" style="background:{{ $bgColor }}">
                     @if($sub['image'])
                         <img src="{{ Storage::url($sub['image']) }}"
                              alt="{{ $sub['name'] }}"
                              onerror="this.style.display='none'">
                     @endif
-                    @if(!$sub['image'])
-                        {{ $sub['initials'] }}
-                    @endif
+                    @if(!$sub['image']) {{ $sub['initials'] }} @endif
                 </div>
 
-                {{-- Hover card sits outside the clipped circle --}}
+                {{-- Hover card --}}
                 <div class="hover-card">
                     <div class="hover-card-top">
-                        <div class="hover-avatar" style="background:{{ $bgColor }}">
+                        <div class="hover-ha" style="background:{{ $bgColor }}">
                             @if($sub['image'])
                                 <img src="{{ Storage::url($sub['image']) }}" alt="">
                             @else
@@ -603,7 +557,7 @@
                     </div>
                     <div class="hover-row">
                         <span class="lbl">النقاط</span>
-                        <span class="val" style="color:{{ $stageColor }}">{{ $sub['points'] }} / 1000</span>
+                        <span class="val" style="color:var(--blue)">{{ $sub['points'] }} / 1000</span>
                     </div>
                     <div class="hover-row">
                         <span class="lbl">المرحلة</span>
@@ -621,8 +575,8 @@
                         <span class="lbl">تاريخ الانضمام</span>
                         <span class="val">{{ $sub['join_date'] }}</span>
                     </div>
-                    <div class="hover-pts-bar">
-                        <div class="hover-pts-fill" style="width:{{ $sub['pct'] }}%;background:{{ $stageColor }}"></div>
+                    <div class="hover-bar">
+                        <div class="hover-fill" style="width:{{ $sub['pct'] }}%"></div>
                     </div>
                     <div style="text-align:center;font-size:0.62rem;color:#94A3B8;margin-top:3px">
                         {{ $sub['pct'] }}% من المضمار
@@ -631,9 +585,33 @@
             </div>
             @endforeach
 
+            {{-- +N expandable badge — stores data as JSON, popup rendered outside canvas --}}
             @if($extra > 0)
-            <div class="sub-count-badge">+{{ $extra }}</div>
+            @php
+                $hiddenData = collect($hidden)->map(function($sub, $hi) use ($avatarColors, $maxVisible) {
+                    return [
+                        'name'      => $sub['name'],
+                        'initials'  => $sub['initials'],
+                        'points'    => $sub['points'],
+                        'image'     => $sub['image'] ? Storage::url($sub['image']) : null,
+                        'color'     => $avatarColors[($hi + $maxVisible) % count($avatarColors)],
+                        'group'     => $sub['group']     ?? '—',
+                        'stage'     => $sub['stage']     ?? '—',
+                        'study'     => $sub['study']     ?? '—',
+                        'join_date' => $sub['join_date'] ?? '—',
+                    ];
+                })->values()->toJson();
+            @endphp
+            <div class="sub-more-badge"
+                 onclick="openGlobalPopup(this, event)"
+                 data-popup-id="{{ $popupId }}"
+                 data-title="{{ $m['label'] }} — {{ $m['title'] }}"
+                 data-sub="{{ $extra }} مشترك إضافي · {{ $subCount }} إجمالاً"
+                 data-hidden='{!! htmlspecialchars($hiddenData, ENT_QUOTES) !!}'>
+                +{{ $extra }}
+            </div>
             @endif
+
         </div>
         @endif
 
@@ -649,7 +627,7 @@
         @foreach($this->milestones as $m)
         @php $cnt = count($byMilestone[$m['id']] ?? []); @endphp
         <div class="legend-item">
-            <div class="legend-dot" style="background:{{ $milestoneStageColor[$m['id']] }}"></div>
+            <div class="legend-dot"></div>
             <span><strong>{{ $m['label'] }}</strong> — {{ $m['title'] }}</span>
             @if($cnt > 0)
                 <span class="legend-cnt">{{ $cnt }}</span>
@@ -668,81 +646,168 @@
 
 </div>
 
-{{-- ══════════════════════════════════════
-     ZOOM ENGINE
-══════════════════════════════════════ --}}
+{{-- Global backdrop --}}
+<div class="popup-backdrop" id="popup-backdrop" onclick="closeAllPopups()"></div>
+
+{{-- Global popup portal — rendered OUTSIDE any transform/overflow context --}}
+<div class="expanded-popup" id="global-popup">
+    <div class="popup-header">
+        <div class="popup-header-left">
+            <span class="popup-header-title" id="global-popup-title"></span>
+            <span class="popup-header-sub"   id="global-popup-sub"></span>
+        </div>
+        <span class="popup-close" onclick="closeAllPopups()">✕</span>
+    </div>
+    <div class="popup-grid" id="global-popup-grid"></div>
+
+    {{-- Detail panel: shown when a subscriber is clicked --}}
+    <div class="popup-detail-panel" id="popup-detail-panel">
+        <span class="popup-detail-close" onclick="closeDetail()">▲ إخفاء التفاصيل</span>
+        <div class="popup-detail-top">
+            <div class="popup-detail-avatar" id="detail-avatar"></div>
+            <div>
+                <div class="popup-detail-name"  id="detail-name"></div>
+                <div class="popup-detail-group" id="detail-group"></div>
+            </div>
+        </div>
+        <div class="popup-detail-rows">
+            <div class="popup-detail-row">
+                <span class="popup-detail-lbl">النقاط</span>
+                <span class="popup-detail-val" id="detail-pts"></span>
+            </div>
+            <div class="popup-detail-row">
+                <span class="popup-detail-lbl">المرحلة</span>
+                <span class="popup-detail-val" id="detail-stage"></span>
+            </div>
+            <div class="popup-detail-row">
+                <span class="popup-detail-lbl">الدراسة</span>
+                <span class="popup-detail-val" id="detail-study"></span>
+            </div>
+            <div class="popup-detail-row">
+                <span class="popup-detail-lbl">تاريخ الانضمام</span>
+                <span class="popup-detail-val" id="detail-join"></span>
+            </div>
+        </div>
+        <div class="popup-detail-bar">
+            <div class="popup-detail-fill" id="detail-fill"></div>
+        </div>
+        <div class="popup-detail-pct" id="detail-pct"></div>
+    </div>
+</div>
+
 <script>
-(function() {
+function openGlobalPopup(badge, event) {
+    event.stopPropagation();
 
-    // Stage → zoom config: scale + translate-Y to center that row
-    // Canvas is 700px tall. Rows at y1=580, y2=420, y3=260, y4=100
-    const stageConfig = {
-        1: { scale: 1.9, ty: -310, color: '#3B82F6' }, // row1 left
-        2: { scale: 1.7, ty: -200, color: '#8B5CF6' }, // row1-right + row2-left
-        3: { scale: 1.9, ty: -185, color: '#F59E0B' }, // row2 right
-        4: { scale: 1.9, ty:  -60, color: '#EF4444' }, // row3
-        5: { scale: 2.2, ty:   80, color: '#10B981' }, // row4 top
-    };
+    const popup    = document.getElementById('global-popup');
+    const backdrop = document.getElementById('popup-backdrop');
 
-    let activeStage = null;
+    // If same badge clicked again → close
+    if (popup.classList.contains('open') && popup.dataset.source === badge.dataset.popupId) {
+        closeAllPopups(); return;
+    }
 
-    window.zoomStage = function(stageId) {
-        // Toggle off if clicking same stage
-        if (activeStage === stageId) { zoomReset(); return; }
-        activeStage = stageId;
+    // Fill popup content from badge data
+    document.getElementById('global-popup-title').textContent = badge.dataset.title;
+    document.getElementById('global-popup-sub').textContent   = badge.dataset.sub;
 
-        const cfg     = stageConfig[stageId];
-        const wrapper = document.getElementById('track-zoom-wrapper');
+    const hidden = JSON.parse(badge.dataset.hidden);
+    const grid   = document.getElementById('global-popup-grid');
+    grid.innerHTML = '';
 
-        // Apply zoom + translate
-        wrapper.style.transform = `scale(${cfg.scale}) translateY(${cfg.ty}px)`;
-        wrapper.classList.add('has-focus');
+    hidden.forEach(sub => {
+        const item = document.createElement('div');
+        item.className = 'popup-item';
+        item.onclick = (e) => { e.stopPropagation(); showDetail(sub); };
 
-        // Spotlight
-        for (let i = 1; i <= 5; i++) {
-            const sp = document.getElementById('spotlight-' + i);
-            if (sp) sp.classList.toggle('lit', i === stageId);
+        const av = document.createElement('div');
+        av.className = 'popup-avatar';
+        av.style.background = sub.color;
+
+        if (sub.image) {
+            const img = document.createElement('img');
+            img.src = sub.image;
+            img.alt = sub.name;
+            img.onerror = () => { img.remove(); av.textContent = sub.initials; };
+            av.appendChild(img);
+        } else {
+            av.textContent = sub.initials;
         }
 
-        // Dim/lit milestones + clusters
-        document.querySelectorAll('.milestone-pin, .sub-cluster').forEach(el => {
-            const s = parseInt(el.dataset.stage);
-            el.classList.toggle('dimmed', s !== stageId);
-            el.classList.toggle('lit',    s === stageId);
-        });
+        const name = document.createElement('div');
+        name.className = 'popup-name';
+        name.textContent = sub.name;
 
-        // Update buttons
-        document.querySelectorAll('.stage-zoom-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.id === 'zoom-btn-' + stageId);
-        });
-        document.getElementById('zoom-reset').classList.add('visible');
+        const pts = document.createElement('div');
+        pts.className = 'popup-pts';
+        pts.textContent = sub.points + 'ن';
 
-        // Scroll track into view smoothly
-        document.getElementById('track-scroll-container')
-            .scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
+        // Tooltip
+        const tip = document.createElement('div');
+        tip.className = 'popup-item-tooltip';
+        tip.textContent = sub.name + ' — ' + sub.points + ' نقطة';
 
-    window.zoomReset = function() {
-        activeStage = null;
+        item.appendChild(av);
+        item.appendChild(name);
+        item.appendChild(pts);
+        item.appendChild(tip);
+        grid.appendChild(item);
+    });
 
-        const wrapper = document.getElementById('track-zoom-wrapper');
-        wrapper.style.transform = 'scale(1) translateY(0px)';
-        wrapper.classList.remove('has-focus');
+    popup.dataset.source = badge.dataset.popupId;
+    popup.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
 
-        // Remove all spotlights
-        document.querySelectorAll('.stage-spotlight').forEach(sp => sp.classList.remove('lit'));
+function showDetail(sub) {
+    const panel = document.getElementById('popup-detail-panel');
 
-        // Restore all elements
-        document.querySelectorAll('.milestone-pin, .sub-cluster').forEach(el => {
-            el.classList.remove('dimmed', 'lit');
-        });
+    // Avatar
+    const av = document.getElementById('detail-avatar');
+    av.style.background = sub.color;
+    av.innerHTML = '';
+    if (sub.image) {
+        const img = document.createElement('img');
+        img.src = sub.image;
+        img.onerror = () => { img.remove(); av.textContent = sub.initials; };
+        av.appendChild(img);
+    } else {
+        av.textContent = sub.initials;
+    }
 
-        // Reset buttons
-        document.querySelectorAll('.stage-zoom-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('zoom-reset').classList.remove('visible');
-    };
+    document.getElementById('detail-name').textContent  = sub.name;
+    document.getElementById('detail-group').textContent = sub.group  || '—';
+    document.getElementById('detail-pts').textContent   = sub.points + ' / 1000 نقطة';
+    document.getElementById('detail-stage').textContent = sub.stage  || '—';
+    document.getElementById('detail-study').textContent = sub.study  || '—';
+    document.getElementById('detail-join').textContent  = sub.join_date || '—';
 
-})();
+    const pct = Math.min(100, Math.round((sub.points / 1000) * 100 * 10) / 10);
+    document.getElementById('detail-fill').style.width = pct + '%';
+    document.getElementById('detail-pct').textContent  = pct + '% من المضمار';
+
+    panel.classList.add('open');
+
+    // Scroll detail into view
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeDetail() {
+    document.getElementById('popup-detail-panel').classList.remove('open');
+}
+
+function closeAllPopups() {
+    const popup    = document.getElementById('global-popup');
+    const backdrop = document.getElementById('popup-backdrop');
+    if (popup)    { popup.classList.remove('open'); delete popup.dataset.source; }
+    if (backdrop) { backdrop.classList.remove('open'); }
+    document.body.style.overflow = '';
+    const detail = document.getElementById('popup-detail-panel');
+    if (detail)   { detail.classList.remove('open'); }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAllPopups(); });
 </script>
 
 </x-filament-panels::page>
