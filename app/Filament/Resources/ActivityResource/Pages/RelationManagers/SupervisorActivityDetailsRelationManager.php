@@ -14,7 +14,8 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
 
     public static function canViewForRecord($ownerRecord, string $pageClass): bool
     {
-        return auth()->user()?->canManageActivities() ?? false;
+        $u = auth()->user();
+        return ($u?->canAssignSupervisorsToActivity() || $u?->canManageSupervisorAssignments()) ?? false;
     }
 
     public function isReadOnly(): bool
@@ -25,17 +26,15 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
     public function form(\Filament\Forms\Form $form): \Filament\Forms\Form
     {
         return $form->schema([
-
             Forms\Components\Select::make('supervisor_id')
                 ->label('المشرف')
                 ->options(
-                    User::whereIn('role', [2, 3])
+                    User::whereIn('role', [2, 3, 6])
                         ->orderBy('name')
                         ->pluck('name', 'id')
                 )
                 ->searchable()
                 ->required(),
-
             Forms\Components\Select::make('activity_role')
                 ->label('الدور')
                 ->options([
@@ -44,7 +43,6 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
                 ])
                 ->default(2)
                 ->required(),
-
             Forms\Components\TextInput::make('evaluation')
                 ->label('التقييم')
                 ->numeric()
@@ -53,12 +51,10 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
                 ->default(1)
                 ->required()
                 ->visible(fn() => auth()->user()?->isSuperAdmin()),
-
             Forms\Components\Textarea::make('notes')
                 ->label('ملاحظات')
                 ->rows(2)
                 ->nullable(),
-
         ]);
     }
 
@@ -70,7 +66,6 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
                     ->label('المشرف')
                     ->sortable()
                     ->searchable(),
-
                 Tables\Columns\BadgeColumn::make('activity_role')
                     ->label('الدور')
                     ->formatStateUsing(fn($state) => match((int)$state) {
@@ -82,12 +77,10 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
                         'warning' => fn($state) => (int)$state === 1,
                         'primary' => fn($state) => (int)$state === 2,
                     ]),
-
                 Tables\Columns\TextColumn::make('evaluation')
                     ->label('التقييم')
                     ->sortable()
                     ->visible(fn() => auth()->user()?->isSuperAdmin()),
-
                 Tables\Columns\TextColumn::make('notes')
                     ->label('ملاحظات')
                     ->wrap()
@@ -96,13 +89,13 @@ class SupervisorActivityDetailsRelationManager extends RelationManager
             ->headerActions([
                 Tables\Actions\CreateAction::make()
                     ->label('إضافة مشرف')
-                    ->visible(fn() => auth()->user()?->isSuperAdmin()),
+                    ->visible(fn() => auth()->user()?->canAssignSupervisorsToActivity() ?? false),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                    ->visible(fn() => auth()->user()?->isSuperAdmin()),
+                    ->visible(fn() => auth()->user()?->canManageSupervisorAssignments() ?? false),
                 Tables\Actions\DeleteAction::make()
-                    ->visible(fn() => auth()->user()?->isSuperAdmin()),
+                    ->visible(fn() => auth()->user()?->canManageSupervisorAssignments() ?? false),
             ])
             ->defaultSort('id', 'desc');
     }

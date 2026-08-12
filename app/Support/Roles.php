@@ -11,6 +11,7 @@ class Roles
     public const SUPERVISOR = 3;
     public const PARENT = 4;
     public const SUBSCRIBER = 5;
+    public const SENIOR_SUPERVISOR = 6;
 
     public static function is(User $user, int $role): bool
     {

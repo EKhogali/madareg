@@ -29,12 +29,12 @@ class ActivityDetailObserver
     // ─────────────────────────────────────────
     private function recalculate(Subscriber $subscriber): void
     {
-        // 1. Sum all evaluations for this subscriber
-        $total = (int) ActivityDetail::where('subscriber_id', $subscriber->id)
+        // 1. Sum all evaluation marks for this subscriber
+        $totalMarks = (int) ActivityDetail::where('subscriber_id', $subscriber->id)
             ->sum('evaluation');
 
-        // 2. Clamp to 1000 max
-        $points = min($total, 1000);
+        // 2. Convert marks to points: every 5 marks = 1 point, clamp to 1000 max
+        $points = min(intdiv($totalMarks, 5), 1000);
 
         // 3. total_points = raw score (new dedicated column)
         $subscriber->total_points = $points;

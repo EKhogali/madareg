@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subscriber_id')->constrained()->cascadeOnDelete();
-            $table->unsignedTinyInteger('evaluation'); // 1 to 10
+            $table->unsignedTinyInteger('evaluation'); // 1 to 30
             $table->text('notes')->nullable();
             $table->timestamps();
 

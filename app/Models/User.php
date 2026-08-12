@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-
     public const ROLE_SUPER_ADMIN = 1;
     public const ROLE_MONITOR = 2;
     public const ROLE_SUPERVISOR = 3;
     public const ROLE_PARENT = 4;
     public const ROLE_SUBSCRIBER = 5;
+    public const ROLE_SENIOR_SUPERVISOR = 6;
 
     use HasFactory, Notifiable;
 
@@ -31,6 +31,8 @@ class User extends Authenticatable
         'image_path',
         'image',
         'role',
+        'can_assign_supervisors',
+        'can_manage_supervisor_assignments',
     ];
 
     /**
@@ -67,6 +69,7 @@ class User extends Authenticatable
     {
         return $this->hasOne(Subscriber::class, 'subscriber_user_id');
     }
+
     /**
      * Get the attributes that should be cast.
      *
@@ -79,53 +82,55 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => 'integer',
             'status' => 'integer',
+            'can_assign_supervisors' => 'boolean',
+            'can_manage_supervisor_assignments' => 'boolean',
         ];
     }
-
 
     public function groups()
     {
         return $this->belongsToMany(Group::class)->withTimestamps();
     }
-    // app/Models/User.php
 
+    // app/Models/User.php
     public function supervisorActivities()
     {
         return $this->hasMany(SupervisorActivityDetail::class, 'supervisor_id');
     }
-
-
 
     public function followUpPeriods(): HasMany
     {
         return $this->hasMany(FollowUpPeriod::class);
     }
 
-
-
     public function isSuperAdmin(): bool
     {
         return (int) $this->role === self::ROLE_SUPER_ADMIN;
     }
+
     public function isAdmin(): bool
     {
         return (int) $this->role === self::ROLE_MONITOR;
     }
+
     public function isSupervisor(): bool
     {
         return (int) $this->role === self::ROLE_SUPERVISOR;
     }
+
+    public function isSeniorSupervisor(): bool
+    {
+        return (int) $this->role === self::ROLE_SENIOR_SUPERVISOR;
+    }
+
     public function isMember(): bool
     {
         return (int) $this->role === self::ROLE_PARENT;
     }
 
-
-
-
     public function isStaff(): bool
     {
-        return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SUPERVISOR], true);
+        return in_array($this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SUPERVISOR, self::ROLE_SENIOR_SUPERVISOR], true);
     }
 
     public function subscribers()
@@ -135,8 +140,21 @@ class User extends Authenticatable
 
     public function canManageActivities(): bool
     {
-        return in_array((int) $this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR], true);
+        return in_array((int) $this->role, [self::ROLE_SUPER_ADMIN, self::ROLE_MONITOR, self::ROLE_SENIOR_SUPERVISOR], true);
     }
 
+    public function canAssignSupervisorsToActivity(): bool
+    {
+        return (bool) $this->can_assign_supervisors;
+    }
 
+    public function canManageSupervisorAssignments(): bool
+    {
+        return (bool) $this->can_manage_supervisor_assignments;
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\CustomResetPasswordNotification($token));
+    }
 }

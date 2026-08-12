@@ -28,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        // ✅ Sidebar Logic: Only User ID 2 sees the sidebar
+        // Sidebar Logic: Only User ID 2 sees the sidebar
         FilamentView::registerRenderHook(
             'panels::head.end',
             fn() => new HtmlString(auth()->id() === 2 ? '' : '
@@ -45,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
             ->colors([
                 'primary' => Color::hex('#F4A623'),
                 'accent' => Color::hex('#0076BF'),
@@ -59,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
                 fn(\Filament\Panel $panel) => $panel->viteTheme('resources/css/filament/admin/theme.css'),
             )
 
-            // ✅ Clean User Menu (No Switcher Logic)
+            // Clean User Menu (No Switcher Logic)
             ->userMenuItems([
                 'my-profile' => MenuItem::make()
                     ->label('ملفي الشخصي')
