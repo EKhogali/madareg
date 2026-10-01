@@ -92,10 +92,17 @@ class ActivityDetailsRelationManager extends RelationManager
             TextColumn::make('notes')->wrap()->label('ملاحظات'),
         ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->mutateFormDataUsing(fn (array $data): array => static::mapAttendance($data)),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        // تحويل الأعمدة المحفوظة إلى قيمة زر الحضور
+                        $data['attendance'] = ! empty($data['att_on_time']) ? 10 : (! empty($data['att_present']) ? 5 : 0);
+                        return $data;
+                    })
+                    ->mutateFormDataUsing(fn (array $data): array => static::mapAttendance($data)),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->defaultSort('id', 'desc');
@@ -106,127 +113,82 @@ class ActivityDetailsRelationManager extends RelationManager
         return auth()->user()?->canManageActivities() ?? false;
     }
 
-protected function mutateFormDataBeforeFill(array $data): array
-{
-    $eval = (int) ($data['evaluation'] ?? 0);
+    // ── تحويل زر الحضور (0/5/10) إلى الأعمدة المحفوظة ──
+    // الموديل [ActivityDetail] هو من يحسب evaluation من هذه الأعمدة عند الحفظ
+    protected static function mapAttendance(array $data): array
+    {
+        $attendance = (int) ($data['attendance'] ?? 0);
 
-    // Reverse-engineer: interactive (5) + subscribed (5) + attendance (5 or 10)
-    $interactive = false;
-    $subscribed  = false;
-    $attendance  = 0;
+        $data['att_present'] = $attendance >= 5;
+        $data['att_on_time'] = $attendance >= 10;
 
-    if ($eval >= 5) {
-        // Try to detect interactive
-        if ($eval % 5 === 0) {
-            $remaining = $eval;
-            if ($remaining >= 5) { $interactive = true; $remaining -= 5; }
-            if ($remaining >= 5) { $subscribed  = true; $remaining -= 5; }
-            $attendance = $remaining; // 0, 5, or 10
-        } else {
-            $attendance = $eval; // fallback
-        }
+        unset($data['attendance']);
+
+        return $data;
     }
 
-    $data['attendance']   = $attendance;
-    $data['subscribed']   = $subscribed;
-    $data['interactive']  = $interactive;
+    // ── مجموع الدرجات للعرض الحي في النموذج ──
+    protected static function previewTotal(\Filament\Forms\Get $get): int
+    {
+        return (int) $get('attendance')
+            + ($get('att_subscription') ? 5 : 0)
+            + ($get('att_interaction') ? 5 : 0);
+    }
 
-    return $data;
-}
+    public function form(Form $form): Form
+    {
+        return $form->schema([
 
-public function form(Form $form): Form
-{
-    return $form->schema([
-
-        Select::make('subscriber_id')
-            ->label('المشترك')
-            ->relationship(
-                name: 'subscriber',
-                titleAttribute: 'name',
-                modifyQueryUsing: function ($query) {
-                    $user = auth()->user();
-                    if ($user?->isSupervisor()) {
-                        $groupIds = $user->groups()->pluck('groups.id');
-                        $query->whereIn('group_id', $groupIds);
+            Select::make('subscriber_id')
+                ->label('المشترك')
+                ->relationship(
+                    name: 'subscriber',
+                    titleAttribute: 'name',
+                    modifyQueryUsing: function ($query) {
+                        $user = auth()->user();
+                        if ($user?->isSupervisor()) {
+                            $groupIds = $user->groups()->pluck('groups.id');
+                            $query->whereIn('group_id', $groupIds);
+                        }
+                        return $query;
                     }
-                    return $query;
-                }
-            )
-            ->preload()
-            ->searchable()
-            ->required(),
+                )
+                ->preload()
+                ->searchable()
+                ->required(),
 
-        // ── Attendance: single radio choice ──
-        \Filament\Forms\Components\Radio::make('attendance')
-            ->label('الحضور')
-            ->options([
-                0  => 'غائب (0 درجات)',
-                5  => 'حضور (5 درجات)',
-                10 => 'حضور في الموعد (10 درجات)',
-            ])
-            ->default(0)
-            ->inline()
-            ->live()
-            ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
-                $set('evaluation', $this->calcEvaluation(
-                    (int) $state,
-                    (bool) $get('subscribed'),
-                    (bool) $get('interactive'),
-                ));
-            })
-            ->dehydrated(false), // virtual field, not saved to DB
+            // ── الحضور: اختيار واحد (حقل افتراضي يُحوَّل إلى att_present / att_on_time عند الحفظ) ──
+            \Filament\Forms\Components\Radio::make('attendance')
+                ->label('الحضور')
+                ->options([
+                    0  => 'غائب (0 درجات)',
+                    5  => 'حضور (5 درجات)',
+                    10 => 'حضور في الموعد (10 درجات)',
+                ])
+                ->default(0)
+                ->inline()
+                ->live(),
 
-        \Filament\Forms\Components\Grid::make(2)->schema([
+            \Filament\Forms\Components\Grid::make(2)->schema([
+                \Filament\Forms\Components\Toggle::make('att_subscription')
+                    ->label('اشتراك (5 درجات)')
+                    ->default(false)
+                    ->live(),
 
-            \Filament\Forms\Components\Toggle::make('subscribed')
-                ->label('اشتراك (5 درجات)')
-                ->default(false)
-                ->live()
-                ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
-                    $set('evaluation', $this->calcEvaluation(
-                        (int) $get('attendance'),
-                        (bool) $state,
-                        (bool) $get('interactive'),
-                    ));
-                })
-                ->dehydrated(false),
+                \Filament\Forms\Components\Toggle::make('att_interaction')
+                    ->label('تفاعل (5 درجات)')
+                    ->default(false)
+                    ->live(),
+            ]),
 
-            \Filament\Forms\Components\Toggle::make('interactive')
-                ->label('تفاعل (5 درجات)')
-                ->default(false)
-                ->live()
-                ->afterStateUpdated(function ($state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
-                    $set('evaluation', $this->calcEvaluation(
-                        (int) $get('attendance'),
-                        (bool) $get('subscribed'),
-                        (bool) $state,
-                    ));
-                })
-                ->dehydrated(false),
-        ]),
+            // ── الإجمالي (للعرض فقط، والحساب الفعلي في الموديل) ──
+            \Filament\Forms\Components\Placeholder::make('evaluation_display')
+                ->label('إجمالي الدرجات')
+                ->content(fn (\Filament\Forms\Get $get): string => static::previewTotal($get) . ' / 20'),
 
-        // ── Total (read-only display + actual saved field) ──
-        \Filament\Forms\Components\Placeholder::make('evaluation_display')
-            ->label('إجمالي الدرجات')
-            ->content(fn(\Filament\Forms\Get $get): string =>
-                ($get('evaluation') ?? 0) . ' / 20'
-            ),
-
-        \Filament\Forms\Components\Hidden::make('evaluation')
-            ->default(0),
-
-        \Filament\Forms\Components\Textarea::make('notes')
-            ->rows(2)
-            ->label('ملاحظات'),
-    ]);
-}
-
-// ── Helper: sum points from choices ──
-private function calcEvaluation(int $attendance, bool $subscribed, bool $interactive): int
-{
-    return $attendance
-        + ($subscribed  ? 5 : 0)
-        + ($interactive ? 5 : 0);
-}
-
+            \Filament\Forms\Components\Textarea::make('notes')
+                ->rows(2)
+                ->label('ملاحظات'),
+        ]);
+    }
 }

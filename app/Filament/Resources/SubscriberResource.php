@@ -383,6 +383,16 @@ class SubscriberResource extends Resource
                         ];
                     }),
 
+                TextColumn::make('name')
+                    ->label(__('name'))
+                    ->searchable()
+                    ->sortable(),
+
+                // نسبة حضور البرامج (مؤقتاً "—" حتى يتم الاتفاق على طريقة الاحتساب)
+                TextColumn::make('attendance_percentage')
+                    ->label('نسبة حضور البرامج')
+                    ->getStateUsing(fn() => '—'),
+
                 Tables\Columns\TextColumn::make('group.name')
                     ->label('المجموعة')
                     ->sortable()
@@ -410,11 +420,6 @@ class SubscriberResource extends Resource
 
                 TextColumn::make('trackDegree.title')
                     ->label('درجة المضمار')
-                    ->sortable(),
-
-                TextColumn::make('name')
-                    ->label(__('name'))
-                    ->searchable()
                     ->sortable(),
 
                 TextColumn::make('birth_date')
